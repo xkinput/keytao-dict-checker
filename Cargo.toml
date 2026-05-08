@@ -11,8 +11,10 @@ keywords = ["chinese", "dictionary", "input-method", "cli", "maintenance"]
 categories = ["command-line-utilities", "text-processing"]
 
 [dependencies]
+rustc-hash = "2.1.2"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = { version = "1.1.2", default-features = false, features = ["parse", "serde"] }
+yaml_serde = "0.10.4"
 
 [profile.release]
 strip = "debuginfo"
