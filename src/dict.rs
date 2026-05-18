@@ -1,23 +1,15 @@
-use crate::trie::Trie;
+use crate::{entry::Entry, trie::Trie};
 use rustc_hash::FxHashMap;
-use std::{fs, rc::Rc};
 
-struct Entry {
-    line_idx: usize,
-    text: Rc<str>,
-    code: Rc<str>,
-    weight: f64,
-}
-
-pub(crate) struct Entries {
-    pool: Vec<Entry>,
-    words: FxHashMap<Rc<str>, Vec<usize>>,
+pub(crate) struct Dict {
+    entries: Vec<Entry>,
+    texts: FxHashMap<std::rc::Rc<str>, Vec<usize>>,
     codes: Trie<usize>,
 }
 
-impl Entries {
-    pub(crate) fn read(dict_path: &str) -> crate::DynResult<Self> {
-        let s = fs::read_to_string(dict_path)?;
+impl Dict {
+    pub(crate) fn load(path: &str) -> crate::DynResult<Self> {
+        let s = std::fs::read_to_string(path)?;
         let mut lines = s.lines().enumerate();
 
         // 丢弃文件头前的内容
@@ -40,48 +32,34 @@ impl Entries {
         }
         let expected = ["text", "code", "weight"];
         let header: Header = yaml_serde::from_str(&yaml)?;
-        if let Some(cols) = header.columns
-            && cols != expected
-        {
-            return Err(format!("不支持此词库列配置：应为{expected:?}，实为{cols:?}").into());
+        if header.columns.is_some_and(|cols| cols != expected) {
+            return Err(format!("词库列配置无效：应为{expected:?}").into());
         }
 
-        let mut pool = Vec::with_capacity(65536);
+        let mut entries = Vec::with_capacity(65536);
         for (i, l) in lines {
             let l = l.trim();
-            if l.is_empty() || l.starts_with('#') {
-                continue;
+            if !l.is_empty() && !l.starts_with('#') {
+                entries.push(Entry::new(i + 1, l)?);
             }
-            let mut parts = l.splitn(4, '\t');
-            let Some(text) = parts.next() else {
-                continue;
-            };
-            let Some(code) = parts.next() else {
-                continue;
-            };
-            pool.push(Entry {
-                line_idx: i,
-                text: text.into(),
-                code: code.into(),
-                weight: parts.next().map_or(0.0, |s| {
-                    let (n, d) = s.strip_suffix('%').map_or((s, 1.0), |n| (n, 100.0));
-                    n.parse::<f64>().map_or(0.0, |v| v / d)
-                }),
-            });
         }
-        let cnt = pool.len();
+        let cnt = entries.len();
         if cnt == 0 {
             return Err("词库为空".into());
         }
 
-        let mut words: FxHashMap<_, Vec<_>> =
+        let mut texts: FxHashMap<_, Vec<_>> =
             FxHashMap::with_capacity_and_hasher(cnt, Default::default());
         let mut codes = Trie::with_capacity(4 * cnt);
-        for (i, e) in pool.iter().enumerate() {
-            words.entry(e.text.clone()).or_default().push(i);
-            codes.insert(&e.code, i);
+        for (i, e) in entries.iter().enumerate() {
+            texts.entry(e.text()).or_default().push(i);
+            codes.insert(e.code(), i);
         }
 
-        Ok(Self { pool, words, codes })
+        Ok(Self {
+            entries,
+            texts,
+            codes,
+        })
     }
 }
