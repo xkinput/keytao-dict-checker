@@ -25,7 +25,20 @@ impl<T> Trie<T> {
         self.values[i].push(v);
     }
 
-    pub(crate) fn for_each_vacant(&self, threshold: usize, f: impl FnMut(&str)) {
-        todo!()
+    pub(crate) fn for_each_vacant(&self, threshold: usize, mut f: impl FnMut(&str)) {
+        self.dfs(0, 0, &mut String::new(), threshold, &mut f);
+    }
+
+    fn dfs(&self, i: usize, d: usize, p: &mut String, th: usize, f: &mut impl FnMut(&str)) -> bool {
+        let mut v = !self.values[i].is_empty();
+        for (&c, &j) in &self.children[i] {
+            p.push(c);
+            v |= self.dfs(j, d + 1, p, th, f);
+            p.pop();
+        }
+        if d >= th && self.values[i].is_empty() && v {
+            f(p);
+        }
+        v
     }
 }
