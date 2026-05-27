@@ -62,4 +62,8 @@ impl Dict {
             codes,
         })
     }
+
+    pub(crate) fn for_each_vacant_code(&self, f: impl FnMut(&str)) {
+        self.codes.for_each_vacant(f)
+    }
 }
