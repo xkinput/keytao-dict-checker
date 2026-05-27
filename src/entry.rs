@@ -21,12 +21,10 @@ impl Entry {
             "" => return Err(format!("第{num}行词条缺失文本").into()),
             trimmed => trimmed.into(),
         };
-        let code = parts
-            .next()
-            .map(|s| s.trim())
-            .filter(|s| !s.is_empty())
-            .ok_or_else(|| format!("第{num}行词条缺失编码"))?
-            .into();
+        let code = match parts.next().map(|s| s.trim()) {
+            Some(s) if !s.is_empty() => s.into(),
+            _ => return Err(format!("第{num}行词条缺失编码").into()),
+        };
         let weight = parts
             .next()
             .map(|s| s.trim())
