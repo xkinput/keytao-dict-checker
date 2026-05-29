@@ -7,14 +7,6 @@ pub(crate) struct Entry {
 }
 
 impl Entry {
-    pub(crate) fn text(&self) -> Rc<str> {
-        self.text.clone()
-    }
-
-    pub(crate) fn code(&self) -> &str {
-        &self.code
-    }
-
     pub(crate) fn new(num: usize, line: &str) -> crate::DynResult<Self> {
         let mut parts = line.splitn(4, '\t');
         let text = match parts.next().unwrap().trim() {
@@ -35,5 +27,21 @@ impl Entry {
         }
 
         Ok(Self { text, code, weight })
+    }
+
+    pub(crate) fn text(&self) -> Rc<str> {
+        self.text.clone()
+    }
+
+    pub(crate) fn single(&self) -> Option<char> {
+        let mut chars = self.text.chars();
+        match (chars.next(), chars.next()) {
+            (Some(single), None) => Some(single),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn code(&self) -> &str {
+        &self.code
     }
 }
