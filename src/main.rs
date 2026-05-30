@@ -1,9 +1,9 @@
 use std::{error, io, io::Write};
 
 mod config;
-mod dict;
 mod entry;
-mod single;
+mod phrase_dict;
+mod single_dict;
 mod trie;
 
 pub(crate) type DynResult<T> = Result<T, Box<dyn error::Error>>;

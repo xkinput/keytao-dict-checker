@@ -1,13 +1,15 @@
-use crate::{entry::Entry, trie::Trie};
+use crate::{entry::Phrase, trie::Trie};
 use rustc_hash::FxHashMap;
 
-pub(crate) struct Dict {
-    entries: Vec<Entry>,
-    texts: FxHashMap<std::rc::Rc<str>, Vec<usize>>,
+type TextMap = FxHashMap<std::rc::Rc<str>, Vec<usize>>;
+
+pub(crate) struct PhraseDict {
+    entries: Vec<Phrase>,
+    texts: TextMap,
     codes: Trie<usize>,
 }
 
-impl Dict {
+impl PhraseDict {
     pub(crate) fn load(path: &str) -> crate::DynResult<Self> {
         let s = std::fs::read_to_string(path)?;
         let mut lines = s.lines().enumerate();
@@ -15,9 +17,8 @@ impl Dict {
 
         let mut entries = Vec::with_capacity(65536);
         for (i, l) in lines {
-            let l = l.trim();
-            if !l.is_empty() && !l.starts_with('#') {
-                entries.push(Entry::new(i + 1, l)?);
+            if let Some(phrase) = Phrase::new(i + 1, l)? {
+                entries.push(phrase);
             }
         }
         let cnt = entries.len();
@@ -25,12 +26,11 @@ impl Dict {
             return Err("词库为空".into());
         }
 
-        let mut texts: FxHashMap<_, Vec<_>> =
-            FxHashMap::with_capacity_and_hasher(cnt, Default::default());
+        let mut texts: TextMap = FxHashMap::with_capacity_and_hasher(cnt, Default::default());
         let mut codes = Trie::with_capacity(4 * cnt);
         for (i, e) in entries.iter().enumerate() {
-            texts.entry(e.text()).or_default().push(i);
-            codes.insert(e.code(), i);
+            texts.entry(e.text.clone()).or_default().push(i);
+            codes.insert(&e.code, i);
         }
 
         Ok(Self {
