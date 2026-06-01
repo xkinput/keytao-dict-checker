@@ -1,18 +1,18 @@
-use crate::{phrase_dict::PhraseDict, single_dict::SingleDict};
+use crate::{dict::DictLoader, phrase_dict::PhraseDict, single_dict::SingleDict};
 
 #[derive(serde::Deserialize)]
 struct RawConfig {
     phrase_dict: String,
     single_dict: Option<String>,
-    vacant: Option<bool>,
-    encoding: Option<bool>,
+    vacant_codes: Option<bool>,
+    err_encodings: Option<bool>,
 }
 
 pub(crate) struct Config {
     pub(crate) phrase_dict: PhraseDict,
     pub(crate) single_dict: Option<SingleDict>,
-    pub(crate) vacant: Option<bool>,
-    pub(crate) encoding: Option<bool>,
+    pub(crate) vacant_codes: bool,
+    pub(crate) err_encodings: bool,
 }
 
 impl Config {
@@ -24,8 +24,8 @@ impl Config {
                 .single_dict
                 .map(|path| SingleDict::load(&path))
                 .transpose()?,
-            vacant: raw.vacant,
-            encoding: raw.encoding,
+            vacant_codes: raw.vacant_codes.unwrap_or(false),
+            err_encodings: raw.err_encodings.unwrap_or(false),
         })
     }
 }

@@ -1,4 +1,4 @@
-use crate::entry::{Phrase, Single};
+use crate::{DynResult, dict::DictLoader, entry};
 use rustc_hash::FxHashMap;
 
 type StemMap = FxHashMap<char, Vec<String>>;
@@ -7,15 +7,11 @@ pub(crate) struct SingleDict {
     stems: StemMap,
 }
 
-impl SingleDict {
-    pub(crate) fn load(path: &str) -> crate::DynResult<Self> {
-        let s = std::fs::read_to_string(path)?;
-        let mut lines = s.lines().enumerate();
-        crate::phrase_dict::PhraseDict::verify_and_rem_header(&mut lines)?;
-
+impl DictLoader for SingleDict {
+    fn parse_lines<'a>(lines: &mut impl Iterator<Item = (usize, &'a str)>) -> DynResult<Self> {
         let mut stems: StemMap = FxHashMap::with_capacity_and_hasher(8192, Default::default());
         for (i, l) in lines {
-            if let Some(single) = Single::new(i + 1, l)? {
+            if let Some(single) = entry::Single::new(i + 1, l)? {
                 let code = single.code;
                 let mut ci = code.char_indices();
                 if ci.nth(2).is_none() {
@@ -37,8 +33,10 @@ impl SingleDict {
 
         Ok(Self { stems })
     }
+}
 
-    pub(crate) fn is_valid_encoding(&self, phrase: &Phrase) -> bool {
+impl SingleDict {
+    pub(crate) fn is_valid_encoding(&self, phrase: &entry::Phrase) -> bool {
         let mut text: Vec<_> = phrase.text.chars().collect();
         if text.len() < 2 {
             return false;
