@@ -1,0 +1,15 @@
+# 词库路径
+phrase_dict = "keytao.phrase.dict.yaml"
+
+# 单字码表路径：若不进行依赖单字码表的检查，则可以省略
+single_dict = "keytao.single.dict.yaml"
+
+# --- 以下检查不依赖单字码表 ---
+
+# 空码：跳过短码而直接编入了更长的编码
+vacant_codes = true
+
+# --- 以下检查依赖单字码表 ---
+
+# 错码：词组编码不符合单字码表
+err_encodings = true
