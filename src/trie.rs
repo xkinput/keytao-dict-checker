@@ -26,8 +26,8 @@ impl<T> Trie<T> {
     }
 
     pub(crate) fn vacant_codes(&self) -> Vec<String> {
-        let mut codes = Vec::new();
-        self.dfs(0, &mut String::new(), &mut codes);
+        let mut codes = vec![];
+        self.dfs(0, &mut String::with_capacity(6), &mut codes);
         codes
     }
 

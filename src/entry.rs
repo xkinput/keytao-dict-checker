@@ -1,3 +1,4 @@
+use crate::DynResult;
 use std::{fmt::Display, rc::Rc};
 
 pub(crate) struct Entry<T> {
@@ -14,11 +15,11 @@ impl<T: Display> Entry<T> {
 }
 
 pub(crate) trait TextParser: Sized {
-    fn parse(num: usize, trimmed_text: &str) -> crate::DynResult<Self>;
+    fn parse(num: usize, trimmed_text: &str) -> DynResult<Self>;
 }
 
 impl<T: TextParser> Entry<T> {
-    pub(crate) fn new(line_num: usize, line: &str) -> crate::DynResult<Option<Self>> {
+    pub(crate) fn new(line_num: usize, line: &str) -> DynResult<Option<Self>> {
         let l = line.trim();
         if l.is_empty() || l.starts_with('#') {
             return Ok(None);
@@ -42,7 +43,7 @@ impl<T: TextParser> Entry<T> {
 pub(crate) type Single = Entry<char>;
 
 impl TextParser for char {
-    fn parse(line_num: usize, trimmed_text: &str) -> crate::DynResult<Self> {
+    fn parse(line_num: usize, trimmed_text: &str) -> DynResult<Self> {
         let mut chars = trimmed_text.chars();
         let c = chars.next().unwrap(); // 一定非空
         if chars.next().is_some() {
@@ -55,7 +56,7 @@ impl TextParser for char {
 pub(crate) type Phrase = Entry<Rc<str>>;
 
 impl TextParser for Rc<str> {
-    fn parse(line_num: usize, trimmed_text: &str) -> crate::DynResult<Self> {
+    fn parse(line_num: usize, trimmed_text: &str) -> DynResult<Self> {
         if trimmed_text.chars().count() < 2 {
             return Err(format!("第{line_num}行词条的文本不是词组").into());
         }
