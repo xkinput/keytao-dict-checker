@@ -36,7 +36,7 @@ impl DictLoader for SingleDict {
 }
 
 impl SingleDict {
-    pub(crate) fn is_valid_encoding(&self, phrase: &entry::Phrase) -> bool {
+    pub(crate) fn is_err_encoding(&self, phrase: &entry::Phrase) -> bool {
         let mut text: Vec<_> = phrase.text.chars().collect();
         if text.len() < 2 {
             return false;

@@ -38,9 +38,9 @@ impl PhraseDict {
         self.codes.vacant_codes()
     }
 
-    pub(crate) fn invalid_encodings(&self, single: &SingleDict) -> impl Iterator<Item = &Phrase> {
+    pub(crate) fn err_encodings(&self, single: &SingleDict) -> impl Iterator<Item = &Phrase> {
         self.pool
             .iter()
-            .filter(|phrase| !single.is_valid_encoding(phrase))
+            .filter(|phrase| single.is_err_encoding(phrase))
     }
 }

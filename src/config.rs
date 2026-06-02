@@ -1,4 +1,5 @@
 use crate::{dict::DictLoader, phrase_dict::PhraseDict, single_dict::SingleDict};
+use std::path::Path;
 
 #[derive(serde::Deserialize)]
 struct RawConfig {
@@ -13,6 +14,7 @@ pub(crate) struct Config {
     pub(crate) single_dict: Option<SingleDict>,
     pub(crate) vacant_codes: bool,
     pub(crate) err_encodings: bool,
+    pub(crate) report_stem: String,
 }
 
 impl Config {
@@ -26,6 +28,12 @@ impl Config {
                 .transpose()?,
             vacant_codes: raw.vacant_codes.unwrap_or(false),
             err_encodings: raw.err_encodings.unwrap_or(false),
+            report_stem: {
+                let path = Path::new(&raw.phrase_dict);
+                let stem = path.file_stem().unwrap_or_default().to_string_lossy();
+                let dir = path.parent().unwrap_or(Path::new("."));
+                dir.join(format!("{stem}-report")).to_string_lossy().into()
+            },
         })
     }
 }
