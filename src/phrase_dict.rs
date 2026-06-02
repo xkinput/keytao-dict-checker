@@ -34,6 +34,10 @@ impl DictLoader for PhraseDict {
 }
 
 impl PhraseDict {
+    pub(crate) fn redundancies(&self) -> Vec<Phrase> {
+        todo!()
+    }
+
     pub(crate) fn vacant_codes(&self) -> Vec<String> {
         self.codes.vacant_codes()
     }
