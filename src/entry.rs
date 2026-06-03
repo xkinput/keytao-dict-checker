@@ -2,7 +2,7 @@ use crate::DynResult;
 use std::{fmt::Display, rc::Rc};
 
 pub(crate) struct Entry<T> {
-    line_num: usize,
+    pub(crate) line_num: usize,
     pub(crate) text: T,
     pub(crate) code: String,
     raw: String,

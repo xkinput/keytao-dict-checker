@@ -45,9 +45,10 @@ fn print(s: &str) -> io::Result<()> {
 
 fn find_redundancies(config: &config::Config, report: &mut Vec<u8>) -> DynResult<()> {
     print("检查冗余...")?;
-    let redundancies = config.phrase_dict.redundancies();
+    let mut redundancies = config.phrase_dict.redundancies();
     if !redundancies.is_empty() {
         writeln!(report, "------冗余------")?;
+        redundancies.sort_unstable_by_key(|phrase| phrase.line_num);
         for phrase in redundancies {
             writeln!(report, "{}", phrase.to_str())?;
         }
@@ -57,9 +58,10 @@ fn find_redundancies(config: &config::Config, report: &mut Vec<u8>) -> DynResult
 
 fn find_vacant_codes(config: &config::Config, report: &mut Vec<u8>) -> DynResult<()> {
     print("检查空码...")?;
-    let vacant_codes = config.phrase_dict.vacant_codes();
+    let mut vacant_codes = config.phrase_dict.vacant_codes();
     if !vacant_codes.is_empty() {
         writeln!(report, "------空码------")?;
+        vacant_codes.sort_unstable();
         for code in vacant_codes {
             writeln!(report, "{code}")?;
         }
