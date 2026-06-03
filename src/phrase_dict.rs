@@ -1,11 +1,9 @@
 use crate::{DynResult, dict::DictLoader, entry::Phrase, single_dict::SingleDict, trie::Trie};
 use rustc_hash::FxHashMap;
 
-type TextMap = FxHashMap<std::rc::Rc<str>, Vec<usize>>;
-
 pub(crate) struct PhraseDict {
     pool: Vec<Phrase>,
-    texts: TextMap,
+    texts: FxHashMap<std::rc::Rc<str>, Vec<usize>>,
     codes: Trie<usize>,
 }
 
@@ -22,10 +20,10 @@ impl DictLoader for PhraseDict {
             return Err("词库为空".into());
         }
 
-        let mut texts: TextMap = FxHashMap::with_capacity_and_hasher(cnt, Default::default());
+        let mut texts = FxHashMap::with_capacity_and_hasher(cnt, Default::default());
         let mut codes = Trie::with_capacity(4 * cnt);
         for (i, e) in pool.iter().enumerate() {
-            texts.entry(e.text.clone()).or_default().push(i);
+            texts.entry(e.text.clone()).or_insert_with(Vec::new).push(i);
             codes.insert(&e.code, i);
         }
 
@@ -34,8 +32,27 @@ impl DictLoader for PhraseDict {
 }
 
 impl PhraseDict {
-    pub(crate) fn redundancies(&self) -> Vec<Phrase> {
-        todo!()
+    pub(crate) fn redundancies(&self) -> Vec<&Phrase> {
+        let mut result = vec![];
+        for (text, indexes) in self.texts.iter().filter(|(_, v)| v.len() > 1) {
+            let stem_len = if text.chars().count() == 3 { 3 } else { 4 };
+            let mut groups = FxHashMap::with_capacity_and_hasher(indexes.len(), Default::default());
+            for phrase in indexes.iter().map(|&i| &self.pool[i]) {
+                let code = &phrase.code;
+                let i = code
+                    .char_indices()
+                    .nth(stem_len)
+                    .map_or(code.len(), |(i, _)| i);
+                groups
+                    .entry(&code[..i])
+                    .or_insert_with(Vec::new)
+                    .push(phrase);
+            }
+            for (_, phrases) in groups.iter().filter(|(_, v)| v.len() > 1) {
+                result.extend(phrases);
+            }
+        }
+        result
     }
 
     pub(crate) fn vacant_codes(&self) -> Vec<String> {
