@@ -20,7 +20,7 @@ fn main() -> DynResult<()> {
     println!(
         "keytao-dict-checker 0.1.0 (20260606)\n\
         作者：Garth TB | 天卜 <g-art-h@outlook.com>\n\
-        仓库：https://github.com/GarthTB/keytao-dict-checker",
+        仓库：https://github.com/xkinput/keytao-dict-checker",
     );
     let mut report = Vec::with_capacity(1024);
     if config.redundancies {
