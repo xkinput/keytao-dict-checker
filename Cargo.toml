@@ -1,23 +1,20 @@
 [package]
 name = "keytao-dict-checker"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
-rust-version = "1.96"
-description = "KeyTao（键道）输入方案词库检查工具"
+license = "MIT"
+publish = false
 readme = "README.md"
 repository = "https://github.com/xkinput/keytao-dict-checker"
-license = "MIT"
-keywords = ["chinese", "dictionary", "input-method", "cli", "maintenance"]
-categories = ["command-line-utilities", "text-processing"]
+rust-version = "1.98.0"
+description = "「RIME 键道」词库检查器"
 
 [dependencies]
-rustc-hash = "2.1.2"
-serde = { version = "1.0.228", features = ["derive"] }
-toml = { version = "1.1.2", default-features = false, features = ["parse", "serde"] }
-yaml_serde = "0.10.4"
+ahash = { version = "0.8.12", default-features = false, features = ["std", "no-rng"] }
+saphyr = { version = "0.0.12", default-features = false }
 
 [profile.release]
-strip = "debuginfo"
-lto = true
-panic = "abort"
 codegen-units = 1
+lto = "fat"
+panic = "abort"
+strip = "symbols"
