@@ -2,6 +2,7 @@ use std::{env::args, error::Error, process::exit};
 
 mod cli;
 mod entry;
+mod vacant;
 
 pub(crate) type DynRes<T> = Result<T, Box<dyn Error>>;
 

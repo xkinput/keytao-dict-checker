@@ -45,7 +45,6 @@ impl ParseText for String {
 }
 
 impl<T: ParseText> Entry<T> {
-    /// 解析词条
     pub(crate) fn parse(line_num: usize, line: &str) -> DynRes<Option<Self>> {
         let l = line.trim_end();
         if l.is_empty() || l.starts_with('#') {

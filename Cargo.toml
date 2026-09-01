@@ -11,6 +11,7 @@ description = "「RIME 键道」词库检查器"
 
 [dependencies]
 ahash = { version = "0.8.12", default-features = false, features = ["std", "no-rng"] }
+rayon = "1.12.0"
 saphyr = { version = "0.0.12", default-features = false }
 
 [profile.release]
