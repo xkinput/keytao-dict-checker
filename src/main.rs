@@ -1,4 +1,4 @@
-use std::{env::args, error::Error, io, io::Write, path::Path, process::exit};
+use std::{env::args, error::Error, io, io::Write, process::exit};
 
 mod cli;
 mod entry;
@@ -9,6 +9,10 @@ mod vacant;
 pub(crate) type DynRes<T> = Result<T, Box<dyn Error>>;
 
 fn main() {
+    println!("「RIME 键道」词库检查器 v{}", env!("CARGO_PKG_VERSION"));
+    println!("作者：Garth TB | 天卜 <g-art-h@outlook.com>");
+    println!("仓库：{}", env!("CARGO_PKG_REPOSITORY"));
+
     if let Err(e) = run() {
         eprintln!("错误：{e}");
         let mut src = e.source();
@@ -17,31 +21,52 @@ fn main() {
             src = s.source();
         }
         exit(1);
+    } else {
+        println!("程序结束。已退出。");
     }
 }
 
 fn run() -> DynRes<()> {
-    println!("「RIME 键道」词库检查器 v{}", env!("CARGO_PKG_VERSION"));
-    println!("作者：Garth TB | 天卜 <g-art-h@outlook.com>");
-    println!("仓库：{}", env!("CARGO_PKG_REPOSITORY"));
-
     print("解析参数...")?;
     let args = cli::Args::parse(args().skip(1))?;
     println!("完成！");
 
     print("载入词库...")?;
-    let (phrases, cnt) = inputs::load_phrase_dict(Path::new(&args.phrase))?;
+    let (phrases, cnt) = inputs::load_phrase_dict(&args.phrase)?;
     println!("完成！共{cnt}个词条。");
 
     let mut singles = None;
     if let Some(single) = args.single {
         print("载入单字码表...")?;
-        let (map, cnt) = inputs::load_single_dict(Path::new(&single))?;
+        let (map, cnt) = inputs::load_single_dict(&single)?;
         println!("完成！共{cnt}个词条，{}个单字。", map.len());
         singles = Some(map);
     }
 
-    todo!("调度")
+    let mut report = Vec::with_capacity(1024);
+
+    // TODO: 检查飞键
+    // TODO: 检查错码
+    // TODO: 检查冗余
+
+    if (args.checks & cli::V) != 0 {
+        print("检查空码...")?;
+        let vacant = vacant::find_vacant_codes(&phrases);
+        match vacant.len() {
+            0 => println!("完成！没有空码。"),
+            cnt => {
+                let mut sorted: Vec<_> = vacant.into_iter().collect();
+                sorted.sort_unstable();
+                writeln!(report, "------空码------")?;
+                for code in sorted {
+                    writeln!(report, "{code}")?;
+                }
+                println!("完成！共{cnt}个空码。");
+            }
+        }
+    }
+
+    todo!("输出文件")
 }
 
 fn print(s: &str) -> io::Result<()> {

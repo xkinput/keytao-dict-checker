@@ -1,7 +1,7 @@
 use ahash::AHashSet;
 use rayon::prelude::*;
 
-fn find_vacant_codes(phrases: &[crate::entry::Phrase]) -> AHashSet<String> {
+pub(crate) fn find_vacant_codes(phrases: &[crate::entry::Phrase]) -> AHashSet<String> {
     let mut used = AHashSet::with_capacity(phrases.len());
     used.extend(phrases.iter().map(|entry| entry.code.as_str()));
 

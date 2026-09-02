@@ -32,6 +32,9 @@ where
         }
     }
 
+    if cnt == 0 {
+        return Err("读不到任何词条".into());
+    }
     Ok(cnt)
 }
 

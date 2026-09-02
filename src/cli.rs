@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 /// 飞键（Alternate）
 pub(crate) const A: u8 = 1 << 0;
 /// 错码（Incorrect）
@@ -10,9 +12,9 @@ pub(crate) const V: u8 = 1 << 3;
 /// 已检验的控制台参数
 pub(crate) struct Args {
     /// 词库路径
-    pub(crate) phrase: String,
+    pub(crate) phrase: PathBuf,
     /// 单字码表路径
-    pub(crate) single: Option<String>,
+    pub(crate) single: Option<PathBuf>,
     /// 检查项
     pub(crate) checks: u8,
 }
@@ -34,9 +36,9 @@ impl Args {
                     _ => return Err(format!("检查项'-{flag}'无效").into()),
                 }
             } else if phrase.is_none() {
-                phrase = Some(arg);
+                phrase = Some(PathBuf::from(&arg));
             } else if single.is_none() {
-                single = Some(arg);
+                single = Some(PathBuf::from(&arg));
             } else {
                 return Err(format!("参数'{arg}'无效").into());
             }
