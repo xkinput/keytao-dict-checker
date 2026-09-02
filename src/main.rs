@@ -2,14 +2,15 @@ use std::{env::args, error::Error, process::exit};
 
 mod cli;
 mod entry;
+mod reader;
 mod vacant;
 
 pub(crate) type DynRes<T> = Result<T, Box<dyn Error>>;
 
 fn main() {
-    if let Err(err) = run() {
-        eprintln!("错误：{err}");
-        let mut src = err.source();
+    if let Err(e) = run() {
+        eprintln!("错误：{e}");
+        let mut src = e.source();
         while let Some(s) = src {
             eprintln!("    > {s}");
             src = s.source();
