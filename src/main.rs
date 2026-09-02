@@ -3,6 +3,7 @@ use std::{env::args, error::Error, io, io::Write, process::exit};
 mod cli;
 mod entry;
 mod inputs;
+mod output;
 mod reader;
 mod vacant;
 
@@ -21,8 +22,6 @@ fn main() {
             src = s.source();
         }
         exit(1);
-    } else {
-        println!("程序结束。已退出。");
     }
 }
 
@@ -36,9 +35,9 @@ fn run() -> DynRes<()> {
     println!("完成！共{cnt}个词条。");
 
     let mut singles = None;
-    if let Some(single) = args.single {
+    if let Some(path) = args.single {
         print("载入单字码表...")?;
-        let (map, cnt) = inputs::load_single_dict(&single)?;
+        let (map, cnt) = inputs::load_single_dict(&path)?;
         println!("完成！共{cnt}个词条，{}个单字。", map.len());
         singles = Some(map);
     }
@@ -66,7 +65,15 @@ fn run() -> DynRes<()> {
         }
     }
 
-    todo!("输出文件")
+    if report.is_empty() {
+        println!("报告为空，未生成文件。");
+    } else {
+        print("输出报告...")?;
+        let path = output::write_report(&args.phrase, &report)?;
+        println!("完成！已写入：{}", path.display());
+    }
+
+    Ok(println!("程序结束。已退出。"))
 }
 
 fn print(s: &str) -> io::Result<()> {
