@@ -44,9 +44,7 @@ impl Args {
             }
         }
 
-        let Some(phrase) = phrase else {
-            return Err("词库路径缺失".into());
-        };
+        let phrase = phrase.ok_or("词库路径缺失")?;
         if checks == 0 {
             checks = A | I | R | V;
         }

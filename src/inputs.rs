@@ -23,7 +23,7 @@ pub(crate) fn load_single_dict(path: &Path) -> DynRes<(SingleDict, usize)> {
             if !stems.contains(&stem) {
                 stems.push(stem);
             }
-        };
+        }
     })?;
     Ok((singles, cnt))
 }

@@ -46,12 +46,12 @@ impl ParseText for String {
 
 impl<T: ParseText> Entry<T> {
     pub(crate) fn parse(line_num: usize, line: &str) -> DynRes<Option<Self>> {
-        let l = line.trim_end();
-        if l.is_empty() || l.starts_with('#') {
+        let raw = line.trim_end();
+        if raw.is_empty() || raw.starts_with('#') {
             return Ok(None);
         }
 
-        let mut parts = l.splitn(3, '\t');
+        let mut parts = raw.splitn(3, '\t');
         let text = parts
             .next()
             .filter(|s| !s.trim().is_empty())
@@ -63,7 +63,7 @@ impl<T: ParseText> Entry<T> {
 
         Ok(Some(Self {
             line_num,
-            raw: l.into(),
+            raw: raw.into(),
             text: T::parse(line_num, text)?,
             code: code.into(),
         }))

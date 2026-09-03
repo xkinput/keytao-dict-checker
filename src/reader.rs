@@ -40,34 +40,24 @@ where
 
 fn validate_header(s: &str) -> crate::DynRes<()> {
     let docs = Yaml::load_from_str(s).map_err(|e| format!("YAML头解析失败: \n{e}"))?;
-    let doc = docs.first().ok_or_else(|| "YAML头为空")?;
+    let doc = docs.first().ok_or("YAML头为空")?;
 
-    if doc
-        .as_mapping_get("name")
+    doc.as_mapping_get("name")
         .and_then(|yaml| yaml.as_str())
-        .is_none()
-    {
-        return Err("YAML头缺失'name'字段".into());
-    }
+        .ok_or("YAML头缺失'name'字段")?;
 
-    if doc
-        .as_mapping_get("version")
+    doc.as_mapping_get("version")
         .and_then(|yaml| yaml.as_str())
-        .is_none()
-    {
-        return Err("YAML头缺失'version'字段".into());
-    }
+        .ok_or("YAML头缺失'version'字段")?;
 
     if let Some(cols) = doc.as_mapping_get("columns") {
-        let seq = cols.as_vec().ok_or_else(|| "'columns'字段不是列表")?;
+        let seq = cols.as_vec().ok_or("'columns'字段不是列表")?;
         let expected = ["text", "code", "weight"];
         if seq.len() != expected.len() {
             return Err("'columns'字段不是[text, code, weight]".into());
         }
         for (i, col) in seq.iter().enumerate() {
-            let s = col
-                .as_str()
-                .ok_or_else(|| "'columns'列表的元素不是字符串")?;
+            let s = col.as_str().ok_or("'columns'列表的元素不是字符串")?;
             if s != expected[i] {
                 return Err("'columns'字段不是[text, code, weight]".into());
             }
