@@ -26,8 +26,8 @@ where
     let mut cnt = 0;
     for (i, line) in lines {
         let line = line?;
-        if let Some(entry) = Entry::<T>::parse(i + 1, &line)? {
-            f(entry);
+        if let Some(e) = Entry::<T>::parse(i + 1, &line)? {
+            f(e);
             cnt += 1;
         }
     }
@@ -44,7 +44,7 @@ fn validate_header(s: &str) -> crate::DynRes<()> {
 
     if doc
         .as_mapping_get("name")
-        .and_then(|v| v.as_str())
+        .and_then(|yaml| yaml.as_str())
         .is_none()
     {
         return Err("YAML头缺失'name'字段".into());
@@ -52,7 +52,7 @@ fn validate_header(s: &str) -> crate::DynRes<()> {
 
     if doc
         .as_mapping_get("version")
-        .and_then(|v| v.as_str())
+        .and_then(|yaml| yaml.as_str())
         .is_none()
     {
         return Err("YAML头缺失'version'字段".into());

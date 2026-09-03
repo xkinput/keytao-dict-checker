@@ -3,9 +3,9 @@ use std::path::{Path, PathBuf};
 
 pub(crate) fn write_report(i_path: &Path, report: &[u8]) -> crate::DynRes<PathBuf> {
     let stem = i_path.file_stem().ok_or("无法获取词库文件名")?;
-    let make_o_path = |suffix: &str| {
+    let make_o_path = |tail: &str| {
         let mut name = stem.to_os_string();
-        name.push(suffix);
+        name.push(tail);
         i_path.with_file_name(name)
     };
 

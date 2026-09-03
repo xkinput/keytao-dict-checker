@@ -3,8 +3,10 @@ use std::{env::args, error::Error, io, io::Write, process::exit};
 mod cli;
 mod entry;
 mod inputs;
+mod keytao;
 mod output;
 mod reader;
+mod redundant;
 mod vacant;
 
 pub(crate) type DynRes<T> = Result<T, Box<dyn Error>>;
@@ -46,15 +48,29 @@ fn run() -> DynRes<()> {
 
     // TODO: 检查飞键
     // TODO: 检查错码
-    // TODO: 检查冗余
+
+    if (args.checks & cli::R) != 0 {
+        print("检查冗余...")?;
+        let r = redundant::find_redundant(&phrases);
+        match r.len() {
+            0 => println!("完成！没有冗余。"),
+            cnt => {
+                writeln!(report, "------冗余------")?;
+                for e in r {
+                    writeln!(report, "{e}")?;
+                }
+                println!("完成！共{cnt}条冗余。");
+            }
+        }
+    }
 
     if (args.checks & cli::V) != 0 {
         print("检查空码...")?;
-        let vacant = vacant::find_vacant_codes(&phrases);
-        match vacant.len() {
+        let v = vacant::find_vacant_codes(&phrases);
+        match v.len() {
             0 => println!("完成！没有空码。"),
             cnt => {
-                let mut sorted: Vec<_> = vacant.into_iter().collect();
+                let mut sorted: Vec<_> = v.into_iter().collect();
                 sorted.sort_unstable();
                 writeln!(report, "------空码------")?;
                 for code in sorted {
