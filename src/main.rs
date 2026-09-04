@@ -2,6 +2,7 @@ use std::{env::args, error::Error, io, io::Write, process::exit};
 
 mod cli;
 mod entry;
+mod incorrect;
 mod inputs;
 mod keytao;
 mod output;
@@ -36,27 +37,41 @@ fn run() -> DynRes<()> {
     let (phrases, cnt) = inputs::load_phrase_dict(&args.phrase)?;
     println!("完成！共{cnt}个词条。");
 
-    let mut singles = None;
+    let mut singles = Default::default();
     if let Some(path) = args.single {
         print("载入单字码表...")?;
         let (map, cnt) = inputs::load_single_dict(&path)?;
         println!("完成！共{cnt}个词条，{}个单字。", map.len());
-        singles = Some(map);
+        singles = map;
     }
 
     let mut report = Vec::with_capacity(1024);
 
     // TODO: 检查飞键
-    // TODO: 检查错码
+
+    if (args.checks & cli::I) != 0 {
+        print("检查错码...")?;
+        let vec = incorrect::find_incorrect(&phrases, &singles);
+        match vec.len() {
+            0 => println!("完成！没有错码。"),
+            cnt => {
+                writeln!(report, "------错码------")?;
+                for e in vec {
+                    writeln!(report, "{e}")?;
+                }
+                println!("完成！共{cnt}条错码。");
+            }
+        }
+    }
 
     if (args.checks & cli::R) != 0 {
         print("检查冗余...")?;
-        let r = redundant::find_redundant(&phrases);
-        match r.len() {
+        let vec = redundant::find_redundant(&phrases);
+        match vec.len() {
             0 => println!("完成！没有冗余。"),
             cnt => {
                 writeln!(report, "------冗余------")?;
-                for e in r {
+                for e in vec {
                     writeln!(report, "{e}")?;
                 }
                 println!("完成！共{cnt}条冗余。");
@@ -66,11 +81,11 @@ fn run() -> DynRes<()> {
 
     if (args.checks & cli::V) != 0 {
         print("检查空码...")?;
-        let v = vacant::find_vacant_codes(&phrases);
-        match v.len() {
+        let set = vacant::find_vacant_codes(&phrases);
+        match set.len() {
             0 => println!("完成！没有空码。"),
             cnt => {
-                let mut sorted: Vec<_> = v.into_iter().collect();
+                let mut sorted: Vec<_> = set.into_iter().collect();
                 sorted.sort_unstable();
                 writeln!(report, "------空码------")?;
                 for code in sorted {

@@ -5,8 +5,8 @@ fn is_xm(b: &&u8) -> bool {
 
 /// 键道6单字编码的构词部分
 pub(crate) fn stem(code: &str) -> Option<[char; 3]> {
-    let mut chars = code.chars();
-    match (chars.next(), chars.next(), chars.next()) {
+    let mut cs = code.chars();
+    match (cs.next(), cs.next(), cs.next()) {
         (Some(a), Some(b), Some(c)) => Some([a, b, c]),
         _ => None,
     }

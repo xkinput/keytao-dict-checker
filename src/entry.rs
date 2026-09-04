@@ -24,8 +24,8 @@ pub(crate) type Single = Entry<char>;
 
 impl ParseText for char {
     fn parse(line_num: usize, text: &str) -> DynRes<Self> {
-        let mut chars = text.chars();
-        match (chars.next(), chars.next()) {
+        let mut cs = text.chars();
+        match (cs.next(), cs.next()) {
             (Some(c), None) => Ok(c),
             _ => Err(format!("第{line_num}行词条的文本不是单字").into()),
         }
