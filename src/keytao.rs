@@ -1,4 +1,4 @@
-/// 是否键道6的形码
+/// 是否为键道6的形码
 fn is_xm(b: &&u8) -> bool {
     matches!(b, b'a' | b'i' | b'o' | b'u' | b'v')
 }

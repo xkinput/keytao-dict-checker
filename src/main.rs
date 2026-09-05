@@ -1,5 +1,6 @@
 use std::{env::args, error::Error, io, io::Write, process::exit};
 
+mod alternate;
 mod cli;
 mod entry;
 mod incorrect;
@@ -16,7 +17,6 @@ fn main() {
     println!("「RIME 键道」词库检查器 v{}", env!("CARGO_PKG_VERSION"));
     println!("作者：Garth TB | 天卜 <g-art-h@outlook.com>");
     println!("仓库：{}", env!("CARGO_PKG_REPOSITORY"));
-
     if let Err(e) = run() {
         eprintln!("错误：{e}");
         let mut src = e.source();
@@ -47,7 +47,29 @@ fn run() -> DynRes<()> {
 
     let mut report = Vec::with_capacity(1024);
 
-    // TODO: 检查飞键
+    if (args.checks & cli::A) != 0 {
+        print("检查飞键...")?;
+        let (def, unc) = alternate::find_alternate(&phrases, &singles);
+        match def.len() + unc.len() {
+            0 => println!("完成！没有飞键问题。"),
+            cnt => {
+                let (d_cnt, u_cnt) = (def.len(), unc.len());
+                if d_cnt != 0 {
+                    writeln!(report, "----飞键缺失----")?;
+                    for e in def {
+                        writeln!(report, "{e}")?;
+                    }
+                }
+                if u_cnt != 0 {
+                    writeln!(report, "----飞键存疑----")?;
+                    for e in unc {
+                        writeln!(report, "{e}")?;
+                    }
+                }
+                println!("完成！共{cnt}条飞键问题，其中{d_cnt}条确定缺失，{u_cnt}条无法确定。");
+            }
+        }
+    }
 
     if (args.checks & cli::I) != 0 {
         print("检查错码...")?;
