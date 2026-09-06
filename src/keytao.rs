@@ -13,6 +13,11 @@ pub(crate) fn ym_len(code: &str) -> usize {
     code.len() - xm_len(code)
 }
 
+/// 编码的音码段
+pub(crate) fn ym(code: &str) -> &[u8] {
+    &code.as_bytes()[..ym_len(code)]
+}
+
 /// 单字编码的构词码
 pub(crate) fn stem(code: &str) -> Option<u32> {
     match code.as_bytes() {

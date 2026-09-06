@@ -6,6 +6,7 @@ mod inputs;
 mod keytao;
 mod output;
 mod reader;
+mod redundant;
 mod vacant;
 
 pub(crate) type DynRes<T = ()> = Result<T, Box<dyn Error>>;
@@ -54,7 +55,18 @@ fn run() -> DynRes {
     }
 
     if (args.checks & cli::R) != 0 {
-        todo!("检查冗余")
+        print("检查冗余...")?;
+        let vec = redundant::check(&phrases);
+        match vec.len() {
+            0 => println!("没有！"),
+            n => {
+                writeln!(report, "------冗余------")?;
+                for phrase in vec {
+                    writeln!(report, "{phrase}")?;
+                }
+                println!("共{n}个！");
+            }
+        }
     }
 
     if (args.checks & cli::V) != 0 {
