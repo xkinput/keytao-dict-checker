@@ -17,7 +17,7 @@ pub(crate) type SingleDict = ahash::AHashMap<char, Vec<u32>>;
 /// 读取并返回单字码表和词条总数
 pub(crate) fn load_single_dict(path: &Path) -> DynRes<(SingleDict, usize)> {
     let mut singles = SingleDict::with_capacity(4096);
-    let cnt = visit_dict(path, |e| {
+    let n = visit_dict(path, |e| {
         if let Some(stem) = stem(&e.code) {
             let stems = singles.entry(e.text).or_default();
             if !stems.contains(&stem) {
@@ -25,5 +25,5 @@ pub(crate) fn load_single_dict(path: &Path) -> DynRes<(SingleDict, usize)> {
             }
         }
     })?;
-    Ok((singles, cnt))
+    Ok((singles, n))
 }

@@ -8,9 +8,9 @@ pub(crate) fn xm_len(code: &str) -> usize {
     code.as_bytes().iter().rev().take_while(is_xm).count()
 }
 
-/// 编码的音码部分
-pub(crate) fn ym(code: &str) -> &str {
-    &code[..code.len() - xm_len(code)]
+/// 编码的音码长度
+pub(crate) fn ym_len(code: &str) -> usize {
+    code.len() - xm_len(code)
 }
 
 /// 单字编码的构词码
