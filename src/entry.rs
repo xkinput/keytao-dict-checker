@@ -11,8 +11,8 @@ pub(crate) trait ParseText: Sized {
 pub(crate) struct Entry<T: ParseText> {
     /// 从 1 开始的行号
     line_num: usize,
-    /// 原始行（按 RIME 右修剪）
-    raw: String,
+    /// 修剪过的原始行
+    line: String,
     /// 文本
     pub(crate) text: T,
     /// 编码
@@ -45,13 +45,13 @@ impl ParseText for String {
 }
 
 impl<T: ParseText> Entry<T> {
+    /// 将词库中修剪过的一行解析为词条
     pub(crate) fn parse(line_num: usize, line: &str) -> DynRes<Option<Self>> {
-        let raw = line.trim_end();
-        if raw.is_empty() || raw.starts_with('#') {
+        if line.is_empty() || line.starts_with('#') {
             return Ok(None);
         }
 
-        let mut parts = raw.splitn(3, '\t');
+        let mut parts = line.splitn(3, '\t');
         let text = parts
             .next()
             .filter(|s| !s.trim().is_empty())
@@ -63,7 +63,7 @@ impl<T: ParseText> Entry<T> {
 
         Ok(Some(Self {
             line_num,
-            raw: raw.into(),
+            line: line.into(),
             text: T::parse(line_num, text)?,
             code: code.into(),
         }))
@@ -72,6 +72,6 @@ impl<T: ParseText> Entry<T> {
 
 impl<T: ParseText> fmt::Display for Entry<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "第{}行：'{}'", self.line_num, self.raw)
+        write!(f, "第{}行：'{}'", self.line_num, self.line)
     }
 }

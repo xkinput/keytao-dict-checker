@@ -1,7 +1,6 @@
 use crate::entry::{Entry, ParseText};
 use saphyr::{LoadableYamlNode, Yaml};
-use std::io::{BufRead, BufReader};
-use std::{fs::File, path::Path};
+use std::{fs::File, io::BufRead, io::BufReader, path::Path};
 
 /// 读取词库 `path` 并对其中的每个词条执行 `f`，返回词条总数
 pub(crate) fn visit_dict<T, F>(path: &Path, mut f: F) -> crate::DynRes<usize>
@@ -15,39 +14,38 @@ where
     let mut header = String::with_capacity(256);
     for (_, line) in lines.by_ref() {
         let line = line?;
+        header += &line;
+        header.push('\n');
         if line.trim_end() == "..." {
             break;
         }
-        header.push_str(&line);
-        header.push('\n');
     }
     validate_header(&header)?;
 
-    let mut cnt = 0;
+    let mut n = 0;
     for (i, line) in lines {
         let line = line?;
-        if let Some(e) = Entry::<T>::parse(i + 1, &line)? {
+        if let Some(e) = Entry::parse(i + 1, line.trim_end())? {
             f(e);
-            cnt += 1;
+            n += 1;
         }
     }
-
-    if cnt == 0 {
+    if n == 0 {
         return Err("读不到任何词条".into());
     }
-    Ok(cnt)
+
+    Ok(n)
 }
 
-fn validate_header(s: &str) -> crate::DynRes<()> {
+fn validate_header(s: &str) -> crate::DynRes {
     let docs = Yaml::load_from_str(s).map_err(|e| format!("YAML头解析失败: \n{e}"))?;
     let doc = docs.first().ok_or("YAML头为空")?;
 
     doc.as_mapping_get("name")
-        .and_then(|yaml| yaml.as_str())
+        .and_then(Yaml::as_str)
         .ok_or("YAML头缺失'name'字段")?;
-
     doc.as_mapping_get("version")
-        .and_then(|yaml| yaml.as_str())
+        .and_then(Yaml::as_str)
         .ok_or("YAML头缺失'version'字段")?;
 
     if let Some(cols) = doc.as_mapping_get("columns") {
@@ -57,8 +55,7 @@ fn validate_header(s: &str) -> crate::DynRes<()> {
             return Err("'columns'字段不是[text, code, weight]".into());
         }
         for (i, col) in seq.iter().enumerate() {
-            let s = col.as_str().ok_or("'columns'列表的元素不是字符串")?;
-            if s != expected[i] {
+            if col.as_str().ok_or("'columns'列表的元素不是字符串")? != expected[i] {
                 return Err("'columns'字段不是[text, code, weight]".into());
             }
         }

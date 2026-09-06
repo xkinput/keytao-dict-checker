@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
-/// 飞键（Alternate）
-pub(crate) const A: u8 = 1 << 0;
-/// 错码（Incorrect）
-pub(crate) const I: u8 = 1 << 1;
-/// 冗余（Redundant）
+/// 错码 Incorrect
+pub(crate) const I: u8 = 1 << 0;
+/// 遗漏 Omitted
+pub(crate) const O: u8 = 1 << 1;
+/// 冗余 Redundant
 pub(crate) const R: u8 = 1 << 2;
-/// 空码（Vacant）
+/// 空码 Vacant
 pub(crate) const V: u8 = 1 << 3;
 
 /// 已检验的控制台参数
@@ -29,16 +29,16 @@ impl Args {
         for arg in args {
             if let Some(flag) = arg.strip_prefix('-') {
                 match flag {
-                    "a" => checks |= A,
                     "i" => checks |= I,
+                    "o" => checks |= O,
                     "r" => checks |= R,
                     "v" => checks |= V,
                     _ => return Err(format!("检查项'-{flag}'无效").into()),
                 }
             } else if phrase.is_none() {
-                phrase = Some(PathBuf::from(&arg));
+                phrase = Some(PathBuf::from(arg));
             } else if single.is_none() {
-                single = Some(PathBuf::from(&arg));
+                single = Some(PathBuf::from(arg));
             } else {
                 return Err(format!("参数'{arg}'无效").into());
             }
@@ -46,10 +46,10 @@ impl Args {
 
         let phrase = phrase.ok_or("词库路径缺失")?;
         if checks == 0 {
-            checks = A | I | R | V;
+            checks = I | O | R | V;
         }
-        if (checks & I) != 0 && single.is_none() {
-            return Err("检查项'-i'依赖单字码表路径，但后者缺失".into());
+        if (checks & (I | O)) != 0 && single.is_none() {
+            return Err("有检查项依赖单字码表，但未提供后者".into());
         }
 
         Ok(Self {

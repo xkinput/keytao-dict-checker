@@ -1,5 +1,4 @@
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::{fs, path::Path, path::PathBuf};
 
 pub(crate) fn write_report(i_path: &Path, report: &[u8]) -> crate::DynRes<PathBuf> {
     let stem = i_path.file_stem().ok_or("无法获取词库文件名")?;

@@ -1,21 +1,16 @@
 use std::{env::args, error::Error, io, io::Write, process::exit};
 
-mod alternate;
 mod cli;
 mod entry;
-mod incorrect;
 mod inputs;
 mod keytao;
 mod output;
 mod reader;
-mod redundant;
-mod vacant;
 
-pub(crate) type DynRes<T> = Result<T, Box<dyn Error>>;
+pub(crate) type DynRes<T = ()> = Result<T, Box<dyn Error>>;
 
 fn main() {
     println!("「RIME 键道」词库检查器 v{}", env!("CARGO_PKG_VERSION"));
-    println!("作者：Garth TB | 天卜 <g-art-h@outlook.com>");
     println!("仓库：{}", env!("CARGO_PKG_REPOSITORY"));
     if let Err(e) = run() {
         eprintln!("错误：{e}");
@@ -28,14 +23,14 @@ fn main() {
     }
 }
 
-fn run() -> DynRes<()> {
+fn run() -> DynRes {
     print("解析参数...")?;
     let args = cli::Args::parse(args().skip(1))?;
     println!("完成！");
 
     print("载入词库...")?;
-    let (phrases, cnt) = inputs::load_phrase_dict(&args.phrase)?;
-    println!("完成！共{cnt}个词条。");
+    let phrases = inputs::load_phrase_dict(&args.phrase)?;
+    println!("完成！共{}个词条。", phrases.len());
 
     let mut singles = Default::default();
     if let Some(path) = args.single {
@@ -47,75 +42,20 @@ fn run() -> DynRes<()> {
 
     let mut report = Vec::with_capacity(1024);
 
-    if (args.checks & cli::A) != 0 {
-        print("检查飞键...")?;
-        let (def, unc) = alternate::find_alternate(&phrases, &singles);
-        match def.len() + unc.len() {
-            0 => println!("完成！没有飞键问题。"),
-            cnt => {
-                let (d_cnt, u_cnt) = (def.len(), unc.len());
-                if d_cnt != 0 {
-                    writeln!(report, "----飞键缺失----")?;
-                    for e in def {
-                        writeln!(report, "{e}")?;
-                    }
-                }
-                if u_cnt != 0 {
-                    writeln!(report, "----飞键存疑----")?;
-                    for e in unc {
-                        writeln!(report, "{e}")?;
-                    }
-                }
-                println!("完成！共{cnt}条飞键问题，其中{d_cnt}条确定缺失，{u_cnt}条无法确定。");
-            }
-        }
+    if (args.checks & cli::I) != 0 {
+        todo!("检查错码")
     }
 
-    if (args.checks & cli::I) != 0 {
-        print("检查错码...")?;
-        let vec = incorrect::find_incorrect(&phrases, &singles);
-        match vec.len() {
-            0 => println!("完成！没有错码。"),
-            cnt => {
-                writeln!(report, "------错码------")?;
-                for e in vec {
-                    writeln!(report, "{e}")?;
-                }
-                println!("完成！共{cnt}条错码。");
-            }
-        }
+    if (args.checks & cli::O) != 0 {
+        todo!("检查遗漏")
     }
 
     if (args.checks & cli::R) != 0 {
-        print("检查冗余...")?;
-        let vec = redundant::find_redundant(&phrases);
-        match vec.len() {
-            0 => println!("完成！没有冗余。"),
-            cnt => {
-                writeln!(report, "------冗余------")?;
-                for e in vec {
-                    writeln!(report, "{e}")?;
-                }
-                println!("完成！共{cnt}条冗余。");
-            }
-        }
+        todo!("检查冗余")
     }
 
     if (args.checks & cli::V) != 0 {
-        print("检查空码...")?;
-        let set = vacant::find_vacant_codes(&phrases);
-        match set.len() {
-            0 => println!("完成！没有空码。"),
-            cnt => {
-                let mut sorted: Vec<_> = set.into_iter().collect();
-                sorted.sort_unstable();
-                writeln!(report, "------空码------")?;
-                for code in sorted {
-                    writeln!(report, "{code}")?;
-                }
-                println!("完成！共{cnt}个空码。");
-            }
-        }
+        todo!("检查空码")
     }
 
     if report.is_empty() {
