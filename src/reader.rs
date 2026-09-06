@@ -1,13 +1,9 @@
-use crate::entry::{Entry, ParseText};
+use crate::{DynRes, entry::Entry, entry::ParseText};
 use saphyr::{LoadableYamlNode, Yaml};
 use std::{fs::File, io::BufRead, io::BufReader, path::Path};
 
 /// 读取词库 `path` 并对其中的每个词条执行 `f`，返回词条总数
-pub(crate) fn visit_dict<T, F>(path: &Path, mut f: F) -> crate::DynRes<usize>
-where
-    T: ParseText,
-    F: FnMut(Entry<T>),
-{
+pub(crate) fn visit_dict<T: ParseText>(path: &Path, mut f: impl FnMut(Entry<T>)) -> DynRes<usize> {
     let reader = BufReader::new(File::open(path)?);
     let mut lines = reader.lines().enumerate();
 
@@ -37,7 +33,7 @@ where
     Ok(n)
 }
 
-fn validate_header(s: &str) -> crate::DynRes {
+fn validate_header(s: &str) -> DynRes {
     let docs = Yaml::load_from_str(s).map_err(|e| format!("YAML头解析失败: \n{e}"))?;
     let doc = docs.first().ok_or("YAML头为空")?;
 
