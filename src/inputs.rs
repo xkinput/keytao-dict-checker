@@ -1,4 +1,4 @@
-use crate::{DynRes, entry::Phrase, keytao::stem, reader::visit_dict};
+use crate::{DynRes, entry::Phrase, keytao::stem_key, reader::visit_dict};
 use std::path::Path;
 
 /// 词库
@@ -18,7 +18,7 @@ pub(crate) type SingleDict = ahash::AHashMap<char, Vec<u32>>;
 pub(crate) fn load_single_dict(path: &Path) -> DynRes<(SingleDict, usize)> {
     let mut singles = SingleDict::with_capacity(4096);
     let n = visit_dict(path, |s| {
-        if let Some(stem) = stem(&s.code) {
+        if let Some(stem) = stem_key(&s.code) {
             let stems = singles.entry(s.text).or_default();
             if !stems.contains(&stem) {
                 stems.push(stem);

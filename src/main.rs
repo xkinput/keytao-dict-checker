@@ -5,6 +5,7 @@ mod entry;
 mod incorrect;
 mod inputs;
 mod keytao;
+mod omitted;
 mod output;
 mod reader;
 mod redundant;
@@ -57,13 +58,31 @@ fn run() -> DynRes {
                 for p in vec {
                     writeln!(report, "{p}")?;
                 }
-                println!("共{n}个！");
+                println!("共{n}条！");
             }
         }
     }
 
     if args.checks & cli::O != 0 {
-        todo!("检查遗漏")
+        print("检查飞键...")?;
+        let (certain, possible) = omitted::check(&phrases, &singles);
+        let n = (certain.len(), possible.len());
+        if n.0 > 0 {
+            writeln!(report, "--确定遗漏飞键--")?;
+            for text in certain {
+                writeln!(report, "{text}")?;
+            }
+        }
+        if n.1 > 0 {
+            writeln!(report, "--可能遗漏飞键--")?;
+            for text in possible {
+                writeln!(report, "{text}")?;
+            }
+        }
+        match n {
+            (0, 0) => println!("没有！"),
+            _ => println!("共{}个词确定遗漏，{}个词可能遗漏！", n.0, n.1),
+        }
     }
 
     if args.checks & cli::R != 0 {
@@ -76,7 +95,7 @@ fn run() -> DynRes {
                 for p in vec {
                     writeln!(report, "{p}")?;
                 }
-                println!("共{n}个！");
+                println!("共{n}条！");
             }
         }
     }

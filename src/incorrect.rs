@@ -57,6 +57,7 @@ fn slot_ok(singles: &SingleDict, c: char, req: [Option<u8>; 3]) -> bool {
 
     let mut mask = 0;
     let mut val = 0;
+
     for (i, b) in req.into_iter().enumerate() {
         if let Some(b) = b {
             let shift = i * 8;
@@ -64,5 +65,6 @@ fn slot_ok(singles: &SingleDict, c: char, req: [Option<u8>; 3]) -> bool {
             val |= (b as u32) << shift;
         }
     }
+
     stems.iter().any(|&s| s & mask == val)
 }
