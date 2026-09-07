@@ -2,6 +2,7 @@ use std::{env::args, error::Error, io, io::Write, process::ExitCode};
 
 mod cli;
 mod entry;
+mod incorrect;
 mod inputs;
 mod keytao;
 mod output;
@@ -46,30 +47,41 @@ fn run() -> DynRes {
 
     let mut report = Vec::with_capacity(1024);
 
-    if (args.checks & cli::I) != 0 {
-        todo!("检查错码")
-    }
-
-    if (args.checks & cli::O) != 0 {
-        todo!("检查遗漏")
-    }
-
-    if (args.checks & cli::R) != 0 {
-        print("检查冗余...")?;
-        let vec = redundant::check(&phrases);
+    if args.checks & cli::I != 0 {
+        print("检查错码...")?;
+        let vec = incorrect::check(&phrases, &singles);
         match vec.len() {
             0 => println!("没有！"),
             n => {
-                writeln!(report, "------冗余------")?;
-                for phrase in vec {
-                    writeln!(report, "{phrase}")?;
+                writeln!(report, "------错码------")?;
+                for p in vec {
+                    writeln!(report, "{p}")?;
                 }
                 println!("共{n}个！");
             }
         }
     }
 
-    if (args.checks & cli::V) != 0 {
+    if args.checks & cli::O != 0 {
+        todo!("检查遗漏")
+    }
+
+    if args.checks & cli::R != 0 {
+        print("检查冗余...")?;
+        let vec = redundant::check(&phrases);
+        match vec.len() {
+            0 => println!("没有！"),
+            n => {
+                writeln!(report, "------冗余------")?;
+                for p in vec {
+                    writeln!(report, "{p}")?;
+                }
+                println!("共{n}个！");
+            }
+        }
+    }
+
+    if args.checks & cli::V != 0 {
         print("检查空码...")?;
         let vec = vacant::check(&phrases);
         match vec.len() {
