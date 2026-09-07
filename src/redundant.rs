@@ -1,25 +1,11 @@
 use crate::{entry::Phrase, keytao::ym};
+use rayon::prelude::*;
 
 pub(crate) fn check(phrases: &[Phrase]) -> Vec<&Phrase> {
-    let mut sorted: Vec<_> = phrases.iter().collect();
-
-    sorted.sort_unstable_by(|&a, &b| {
-        a.text
-            .cmp(&b.text)
-            .then_with(|| ym(&a.code).cmp(ym(&b.code)))
-            .then_with(|| a.code.len().cmp(&b.code.len()))
-    });
-
-    let mut prev = None;
-    sorted.retain(|&p| {
-        let keep = prev.is_some_and(|q| same_chain(q, p));
-        prev = Some(p);
-        keep
-    });
-
-    sorted
-}
-
-fn same_chain(a: &Phrase, b: &Phrase) -> bool {
-    a.text == b.text && ym(&a.code) == ym(&b.code)
+    let mut vec = Vec::from_iter(phrases);
+    vec.par_sort_unstable_by_key(|&p| (&p.text, ym(&p.code), p.code.len()));
+    vec.windows(2)
+        .filter(|w| w[0].text == w[1].text && ym(&w[0].code) == ym(&w[1].code))
+        .map(|w| w[1])
+        .collect()
 }
