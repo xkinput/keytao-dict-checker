@@ -7,7 +7,7 @@ pub(crate) trait ParseText: Sized {
     fn parse(line_num: usize, text: &str) -> DynRes<Self>;
 }
 
-/// 词库中的词条
+/// 码表中的词条
 pub(crate) struct Entry<T: ParseText> {
     /// 从 1 开始的行号
     line_num: usize,
@@ -45,7 +45,7 @@ impl ParseText for String {
 }
 
 impl<T: ParseText> Entry<T> {
-    /// 将词库中修剪过的一行解析为词条
+    /// 将码表中修剪过的一行解析为词条
     pub(crate) fn parse(line_num: usize, line: &str) -> DynRes<Option<Self>> {
         if line.is_empty() || line.starts_with('#') {
             return Ok(None);
@@ -55,11 +55,11 @@ impl<T: ParseText> Entry<T> {
         let text = parts
             .next()
             .filter(|s| !s.trim().is_empty())
-            .ok_or_else(|| format!("第{line_num}行词条缺失文本"))?;
+            .ok_or(format!("第{line_num}行词条缺失文本"))?;
         let code = parts
             .next()
             .filter(|s| !s.trim().is_empty())
-            .ok_or_else(|| format!("第{line_num}行词条缺失编码"))?;
+            .ok_or(format!("第{line_num}行词条缺失编码"))?;
 
         Ok(Some(Self {
             line_num,
