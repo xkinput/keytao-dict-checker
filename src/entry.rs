@@ -49,13 +49,13 @@ impl<T: EntryText> Entry<T> {
         let raw_text = parts
             .next()
             .filter(|s| !s.trim().is_empty())
-            .ok_or_else(|| "缺失文本".to_string())?;
-        let parsed_text = T::parse(raw_text).ok_or_else(|| format!("文本不是{}", T::KIND))?;
+            .ok_or_else(|| "缺失文本。".to_string())?;
+        let parsed_text = T::parse(raw_text).ok_or_else(|| format!("文本不是{}。", T::KIND))?;
 
         let code = parts
             .next()
             .filter(|s| !s.trim().is_empty())
-            .ok_or_else(|| "缺失编码".to_string())?;
+            .ok_or_else(|| "缺失编码。".to_string())?;
 
         Ok(Some(Self {
             line_num,
@@ -68,6 +68,6 @@ impl<T: EntryText> Entry<T> {
 
 impl<T: EntryText> fmt::Display for Entry<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "第{}行：'{}'", self.line_num, self.line)
+        write!(f, "第 {} 行：\t{}", self.line_num, self.line)
     }
 }
