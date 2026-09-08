@@ -1,14 +1,12 @@
-use crate::DynRes;
 use std::fmt;
 
-/// 词条文本解析契约
-pub(crate) trait ParseText: Sized {
-    /// 解析并校验词条文本
-    fn parse(line_num: usize, text: &str) -> DynRes<Self>;
+pub(crate) trait EntryText: Sized {
+    const KIND: &str;
+    fn parse(s: &str) -> Option<Self>;
 }
 
 /// 码表中的词条
-pub(crate) struct Entry<T: ParseText> {
+pub(crate) struct Entry<T: EntryText> {
     /// 从 1 开始的行号
     line_num: usize,
     /// 修剪过的原始行
@@ -22,55 +20,53 @@ pub(crate) struct Entry<T: ParseText> {
 /// 单字词条
 pub(crate) type Single = Entry<char>;
 
-impl ParseText for char {
-    fn parse(line_num: usize, text: &str) -> DynRes<Self> {
-        let mut cs = text.chars();
-        match (cs.next(), cs.next()) {
-            (Some(c), None) => Ok(c),
-            _ => Err(format!("第{line_num}行词条的文本不是单字").into()),
-        }
-    }
-}
-
 /// 词组词条
 pub(crate) type Phrase = Entry<String>;
 
-impl ParseText for String {
-    fn parse(line_num: usize, text: &str) -> DynRes<Self> {
-        if text.chars().nth(1).is_none() {
-            return Err(format!("第{line_num}行词条的文本不是词组").into());
-        }
-        Ok(text.into())
+impl EntryText for char {
+    const KIND: &str = "单字";
+    fn parse(s: &str) -> Option<Self> {
+        s.parse().ok()
     }
 }
 
-impl<T: ParseText> Entry<T> {
-    /// 将码表中修剪过的一行解析为词条
-    pub(crate) fn parse(line_num: usize, line: &str) -> DynRes<Option<Self>> {
+impl EntryText for String {
+    const KIND: &str = "词组";
+    fn parse(s: &str) -> Option<Self> {
+        s.chars().nth(1).is_some().then(|| s.into())
+    }
+}
+
+impl<T: EntryText> Entry<T> {
+    /// 将修剪过的码表行解析为词条
+    pub(crate) fn parse(line_num: usize, line: &str) -> crate::DynRes<Option<Self>> {
         if line.is_empty() || line.starts_with('#') {
             return Ok(None);
         }
 
         let mut parts = line.splitn(3, '\t');
-        let text = parts
+
+        let raw_text = parts
             .next()
             .filter(|s| !s.trim().is_empty())
-            .ok_or(format!("第{line_num}行词条缺失文本"))?;
+            .ok_or_else(|| "缺失文本".to_string())?;
+        let parsed_text = T::parse(raw_text).ok_or_else(|| format!("文本不是{}", T::KIND))?;
+
         let code = parts
             .next()
             .filter(|s| !s.trim().is_empty())
-            .ok_or(format!("第{line_num}行词条缺失编码"))?;
+            .ok_or_else(|| "缺失编码".to_string())?;
 
         Ok(Some(Self {
             line_num,
             line: line.into(),
-            text: T::parse(line_num, text)?,
+            text: parsed_text,
             code: code.into(),
         }))
     }
 }
 
-impl<T: ParseText> fmt::Display for Entry<T> {
+impl<T: EntryText> fmt::Display for Entry<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "第{}行：'{}'", self.line_num, self.line)
     }
