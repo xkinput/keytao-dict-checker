@@ -10,18 +10,18 @@ pub(crate) struct Entry<T: EntryText> {
     /// 从 1 开始的行号
     line_num: usize,
     /// 修剪过的原始行
-    line: String,
+    line: Box<str>,
     /// 文本
     pub(crate) text: T,
     /// 编码
-    pub(crate) code: String,
+    pub(crate) code: Box<str>,
 }
 
 /// 单字词条
 pub(crate) type Single = Entry<char>;
 
 /// 词组词条
-pub(crate) type Phrase = Entry<String>;
+pub(crate) type Phrase = Entry<Box<str>>;
 
 impl EntryText for char {
     const KIND: &str = "单字";
@@ -30,7 +30,7 @@ impl EntryText for char {
     }
 }
 
-impl EntryText for String {
+impl EntryText for Box<str> {
     const KIND: &str = "词组";
     fn parse(s: &str) -> Option<Self> {
         s.chars().nth(1).is_some().then(|| s.into())

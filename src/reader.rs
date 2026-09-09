@@ -1,4 +1,4 @@
-use crate::{DynRes, entry::Entry, entry::EntryText};
+use crate::{entry::*, *};
 use saphyr::{LoadableYamlNode, Yaml};
 use std::{fs::File, io::BufRead, io::BufReader, path::Path};
 
