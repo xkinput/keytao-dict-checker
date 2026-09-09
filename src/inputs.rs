@@ -19,10 +19,10 @@ pub(crate) fn load_stems(path: &Path) -> DynRes<(StemMap, usize)> {
     let mut map = StemMap::with_capacity(4096);
     let mut n = 0;
 
-    for_each_entry(path, |s| {
+    for_each_entry(path, |e| {
         n += 1;
-        if let Some(stem) = stem(&s.code) {
-            let stems = map.entry(s.text).or_default();
+        if let Some(stem) = stem(&e.code) {
+            let stems = map.entry(e.text).or_default();
             if !stems.contains(&stem) {
                 stems.push(stem);
             }

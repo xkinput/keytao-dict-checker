@@ -22,7 +22,7 @@ pub(crate) fn for_each_entry<T: EntryText>(path: &Path, mut f: impl FnMut(Entry<
         }
     }
 
-    validate_header(&header)?;
+    validate_header(&header).map_err(|e| format!("YAML 文件头异常：{e}"))?;
 
     loop {
         line.clear();
@@ -41,18 +41,18 @@ pub(crate) fn for_each_entry<T: EntryText>(path: &Path, mut f: impl FnMut(Entry<
 }
 
 fn validate_header(s: &str) -> DynRes {
-    let docs = Yaml::load_from_str(s).map_err(|e| format!("YAML 头解析失败：{e}"))?;
-    let doc = docs.first().ok_or("YAML 头为空。")?;
+    let docs = Yaml::load_from_str(s).map_err(|e| format!("无法解析：{e}"))?;
+    let doc = docs.first().ok_or("为空。")?;
 
     doc.as_mapping_get("name")
         .and_then(Yaml::as_str)
-        .ok_or("YAML 头中的 name 缺失或不是字符串。")?;
+        .ok_or("name 缺失或不是字符串。")?;
     doc.as_mapping_get("version")
         .and_then(Yaml::as_str)
-        .ok_or("YAML 头中的 version 缺失或不是字符串。")?;
+        .ok_or("version 缺失或不是字符串。")?;
 
     if let Some(cols) = doc.as_mapping_get("columns") {
-        let seq = cols.as_vec().ok_or("YAML 头中的 columns 不是列表。")?;
+        let seq = cols.as_vec().ok_or("columns 不是列表。")?;
         let expected = ["text", "code", "weight"];
         if seq.len() != expected.len()
             || seq
@@ -60,7 +60,7 @@ fn validate_header(s: &str) -> DynRes {
                 .zip(expected)
                 .any(|(col, name)| col.as_str() != Some(name))
         {
-            return Err("YAML 头中的 columns 不是 [text, code, weight]".into());
+            return Err("columns 不是 [text, code, weight]".into());
         }
     }
 

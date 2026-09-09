@@ -49,13 +49,13 @@ impl<T: EntryText> Entry<T> {
         let raw_text = parts
             .next()
             .filter(|s| !s.trim().is_empty())
-            .ok_or_else(|| "缺失文本。".to_string())?;
+            .ok_or("缺失文本。")?;
         let parsed_text = T::parse(raw_text).ok_or_else(|| format!("文本不是{}。", T::KIND))?;
 
         let code = parts
             .next()
             .filter(|s| !s.trim().is_empty())
-            .ok_or_else(|| "缺失编码。".to_string())?;
+            .ok_or("缺失编码。")?;
 
         Ok(Some(Self {
             line_num,
