@@ -1,21 +1,38 @@
-use std::{env::args, error::Error, io, io::Write, process::ExitCode};
+use cli::*;
+use inputs::*;
+use output::*;
+use std::{env::args, error::Error, io, io::Write, path::Path, process::ExitCode};
 
 mod cli;
 mod entry;
-mod incorrect;
 mod inputs;
 mod keytao;
-mod omitted;
 mod output;
 mod reader;
-mod redundant;
-mod vacant;
+
+mod checks {
+    mod p_companion;
+    mod p_consistency;
+    mod p_redundancy;
+    mod s_companion;
+    mod s_omission;
+    mod s_redundancy;
+    mod vacancy;
+}
+
+const TITLE: &str = "「RIME 键道」（KeyTao）码表检查器";
+const VER: &str = env!("CARGO_PKG_VERSION");
+const AUTHOR: &str = "Garth TB | 天卜 <g-art-h@outlook.com>";
+const REPO: &str = env!("CARGO_PKG_REPOSITORY");
 
 pub(crate) type DynRes<T = ()> = Result<T, Box<dyn Error>>;
 
 fn main() -> ExitCode {
-    println!("「RIME 键道」词库检查器 v{}", env!("CARGO_PKG_VERSION"));
-    println!("仓库：{}", env!("CARGO_PKG_REPOSITORY"));
+    println!("{TITLE} v{VER}");
+    println!("作者：{AUTHOR}");
+    println!("仓库：{REPO}");
+    println!("================");
+
     if let Err(e) = run() {
         eprintln!("错误：{e}");
         let mut src = e.source();
@@ -31,102 +48,74 @@ fn main() -> ExitCode {
 
 fn run() -> DynRes {
     print("解析参数...")?;
-    let args = cli::Args::parse(args().skip(1))?;
+    let args = Args::parse(args().skip(1))?;
     println!("完成！");
 
-    print("载入词库...")?;
-    let phrases = inputs::load_phrase_dict(&args.phrase)?;
-    println!("共{}个词条！", phrases.len());
-
-    let mut singles = Default::default();
-    if let Some(path) = args.single {
-        print("载入单字码表...")?;
-        let (map, n) = inputs::load_single_dict(&path)?;
-        println!("共{n}个词条，{}个单字！", map.len());
-        singles = map;
-    }
-
-    let mut report = Vec::with_capacity(1024);
-
-    if args.checks & cli::I != 0 {
-        print("检查错码...")?;
-        let vec = incorrect::check(&phrases, &singles);
-        match vec.len() {
-            0 => println!("没有！"),
-            n => {
-                writeln!(report, "------错码------")?;
-                for p in vec {
-                    writeln!(report, "{p}")?;
-                }
-                println!("共{n}条！");
-            }
-        }
-    }
-
-    if args.checks & cli::O != 0 {
-        print("检查飞键...")?;
-        let (certain, possible) = omitted::check(&phrases, &singles);
-        let n = (certain.len(), possible.len());
-        if n.0 > 0 {
-            writeln!(report, "--确定遗漏飞键--")?;
-            for text in certain {
-                writeln!(report, "{text}")?;
-            }
-        }
-        if n.1 > 0 {
-            writeln!(report, "--可能遗漏飞键--")?;
-            for text in possible {
-                writeln!(report, "{text}")?;
-            }
-        }
-        match n {
-            (0, 0) => println!("没有！"),
-            _ => println!("共{}个词确定遗漏，{}个词可能遗漏！", n.0, n.1),
-        }
-    }
-
-    if args.checks & cli::R != 0 {
-        print("检查冗余...")?;
-        let vec = redundant::check(&phrases);
-        match vec.len() {
-            0 => println!("没有！"),
-            n => {
-                writeln!(report, "------冗余------")?;
-                for p in vec {
-                    writeln!(report, "{p}")?;
-                }
-                println!("共{n}条！");
-            }
-        }
-    }
-
-    if args.checks & cli::V != 0 {
-        print("检查空码...")?;
-        let vec = vacant::check(&phrases);
-        match vec.len() {
-            0 => println!("没有！"),
-            n => {
-                writeln!(report, "------空码------")?;
-                for code in vec {
-                    writeln!(report, "{code}")?;
-                }
-                println!("共{n}个！");
-            }
-        }
-    }
-
-    if report.is_empty() {
-        println!("报告为空，词库没问题！");
-    } else {
-        print("输出报告...")?;
-        let path = output::write_report(&args.phrase, &report)?;
-        println!("已写入：{}", path.display());
+    match args {
+        Args::SingleOnly(path) => check_single_only(&path)?,
+        Args::PhraseOnly(path) => check_phrase_only(&path)?,
+        Args::Both {
+            single: s_path,
+            phrase: p_path,
+        } => check_both(&s_path, &p_path)?,
     }
 
     Ok(println!("程序结束，已退出！"))
 }
 
+fn check_single_only(path: &Path) -> DynRes {
+    print("载入单字码表...")?;
+    let singles: SingleDict = load_dict(path)?;
+    println!("完成！共 {} 个词条", singles.len());
+
+    let mut report = Vec::with_capacity(1024);
+
+    // TODO
+
+    write_report_and_show(&report, path, "单字")
+}
+
+fn check_phrase_only(path: &Path) -> DynRes {
+    print("载入词组码表...")?;
+    let phrases: PhraseDict = load_dict(path)?;
+    println!("完成！共 {} 个词条", phrases.len());
+
+    let mut report = Vec::with_capacity(1024);
+
+    // TODO
+
+    write_report_and_show(&report, path, "词组")
+}
+
+fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
+    print("载入单字码表...")?;
+    let singles: SingleDict = load_dict(s_path)?;
+    println!("完成！共 {} 个词条", singles.len());
+
+    print("载入词组码表...")?;
+    let phrases: PhraseDict = load_dict(p_path)?;
+    println!("完成！共 {} 个词条", phrases.len());
+
+    let mut s_report = Vec::with_capacity(1024);
+    let mut p_report = Vec::with_capacity(1024);
+
+    // TODO
+
+    write_report_and_show(&s_report, s_path, "单字")?;
+    write_report_and_show(&p_report, p_path, "词组")
+}
+
 fn print(s: &str) -> io::Result<()> {
     print!("{s}");
     io::stdout().flush()
+}
+
+fn write_report_and_show(report: &[u8], path: &Path, kind: &str) -> DynRes {
+    if report.is_empty() {
+        Ok(println!("{kind}报告为空，码表没问题！"))
+    } else {
+        print(&format!("输出{kind}报告..."))?;
+        let file_name = write_report(path, &report)?;
+        Ok(println!("已写入：{}", file_name.display()))
+    }
 }

@@ -3,7 +3,7 @@ use std::path::PathBuf;
 pub(crate) enum Args {
     SingleOnly(PathBuf),
     PhraseOnly(PathBuf),
-    Both { phrase: PathBuf, single: PathBuf },
+    Both { single: PathBuf, phrase: PathBuf },
 }
 
 impl Args {
@@ -17,8 +17,8 @@ impl Args {
             "-s" => Args::SingleOnly(b.into()),
             "-p" => Args::PhraseOnly(b.into()),
             _ => Args::Both {
-                phrase: a.into(),
-                single: b.into(),
+                single: a.into(),
+                phrase: b.into(),
             },
         })
     }

@@ -1,12 +1,14 @@
 use crate::{entry::*, keytao::*, reader::*, *};
 use std::path::Path;
 
-/// 码表
-pub(crate) type Dict<T> = Vec<Entry<T>>;
+/// 单字码表
+pub(crate) type SingleDict = Vec<Entry<char>>;
+/// 词组码表
+pub(crate) type PhraseDict = Vec<Entry<Box<str>>>;
 
 /// 读取并返回码表
-pub(crate) fn load_dict<T: EntryText>(path: &Path) -> DynRes<Dict<T>> {
-    let mut dict = Dict::with_capacity(4096);
+pub(crate) fn load_dict<T: EntryText>(path: &Path) -> DynRes<Vec<Entry<T>>> {
+    let mut dict = Vec::with_capacity(4096);
     for_each_entry(path, |e| dict.push(e))?;
     Ok(dict)
 }
