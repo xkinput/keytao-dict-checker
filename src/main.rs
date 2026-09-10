@@ -1,4 +1,6 @@
+use checks::*;
 use cli::*;
+use entry::*;
 use inputs::*;
 use output::*;
 use std::{env::args, error::Error, io, io::Write, path::Path, process::ExitCode};
@@ -11,13 +13,14 @@ mod output;
 mod reader;
 
 mod checks {
-    mod p_companion;
-    mod p_consistency;
-    mod p_redundancy;
-    mod s_companion;
-    mod s_omission;
-    mod s_redundancy;
-    mod vacancy;
+    pub(crate) mod p_companion;
+    pub(crate) mod p_consistency;
+    pub(crate) mod p_redundancy;
+    pub(crate) mod p_vacancy;
+    pub(crate) mod s_companion;
+    pub(crate) mod s_omission;
+    pub(crate) mod s_redundancy;
+    pub(crate) mod s_vacancy;
 }
 
 const TITLE: &str = "「RIME 键道」（KeyTao）码表检查器";
@@ -66,43 +69,52 @@ fn run() -> DynRes {
 fn check_single_only(path: &Path) -> DynRes {
     print("载入单字码表...")?;
     let singles: SingleDict = load_dict(path)?;
-    println!("完成！共 {} 个词条", singles.len());
+    println!("完成！共 {} 个词条。", singles.len());
 
     let mut report = Vec::with_capacity(1024);
 
     // TODO
 
-    write_report_and_show(&report, path, "单字")
+    output_report(&report, path, "单字")
 }
 
 fn check_phrase_only(path: &Path) -> DynRes {
     print("载入词组码表...")?;
     let phrases: PhraseDict = load_dict(path)?;
-    println!("完成！共 {} 个词条", phrases.len());
+    println!("完成！共 {} 个词条。", phrases.len());
 
     let mut report = Vec::with_capacity(1024);
 
+    check_p_vacancy(&phrases, &mut report)?;
+
     // TODO
 
-    write_report_and_show(&report, path, "词组")
+    output_report(&report, path, "词组")
 }
 
 fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
     print("载入单字码表...")?;
     let singles: SingleDict = load_dict(s_path)?;
-    println!("完成！共 {} 个词条", singles.len());
+    let stems = load_stems(s_path)?;
+    println!(
+        "完成！共 {} 个词条，{} 个单字。",
+        singles.len(),
+        stems.len()
+    );
 
     print("载入词组码表...")?;
     let phrases: PhraseDict = load_dict(p_path)?;
-    println!("完成！共 {} 个词条", phrases.len());
+    println!("完成！共 {} 个词条。", phrases.len());
 
     let mut s_report = Vec::with_capacity(1024);
     let mut p_report = Vec::with_capacity(1024);
 
+    check_p_vacancy(&phrases, &mut p_report)?;
+
     // TODO
 
-    write_report_and_show(&s_report, s_path, "单字")?;
-    write_report_and_show(&p_report, p_path, "词组")
+    output_report(&s_report, s_path, "单字")?;
+    output_report(&p_report, p_path, "词组")
 }
 
 fn print(s: &str) -> io::Result<()> {
@@ -110,7 +122,22 @@ fn print(s: &str) -> io::Result<()> {
     io::stdout().flush()
 }
 
-fn write_report_and_show(report: &[u8], path: &Path, kind: &str) -> DynRes {
+fn check_p_vacancy(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
+    print("检查词组空码...")?;
+    let v = p_vacancy::check(&phrases);
+    Ok(match v.len() {
+        0 => println!("没有！"),
+        n => {
+            writeln!(report, "======空码======")?;
+            for code in v {
+                writeln!(report, "{code}")?;
+            }
+            println!("共 {n} 个！");
+        }
+    })
+}
+
+fn output_report(report: &[u8], path: &Path, kind: &str) -> DynRes {
     if report.is_empty() {
         Ok(println!("{kind}报告为空，码表没问题！"))
     } else {
