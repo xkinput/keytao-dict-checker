@@ -1,10 +1,3 @@
-use checks::*;
-use cli::*;
-use entry::*;
-use inputs::*;
-use output::*;
-use std::{env::args, error::Error, io, io::Write, path::Path, process::ExitCode};
-
 mod checks;
 mod cli;
 mod entry;
@@ -12,6 +5,13 @@ mod inputs;
 mod keytao;
 mod output;
 mod reader;
+
+use checks::*;
+use cli::*;
+use entry::*;
+use inputs::*;
+use output::*;
+use std::{env::args, error::Error, fmt::Display, io, io::Write, path::Path, process::ExitCode};
 
 const TITLE: &str = "「RIME 键道」（KeyTao）码表检查器";
 const VER: &str = env!("CARGO_PKG_VERSION");
@@ -64,7 +64,6 @@ fn check_single_only(path: &Path) -> DynRes {
     let mut report = Vec::with_capacity(1024);
 
     check_s_format(&singles, &mut report)?;
-
     // TODO
 
     output_report(&report, path, "单字")
@@ -79,7 +78,6 @@ fn check_phrase_only(path: &Path) -> DynRes {
 
     check_p_format(&phrases, &mut report)?;
     check_p_vacancy(&phrases, &mut report)?;
-
     // TODO
 
     output_report(&report, path, "词组")
@@ -105,61 +103,39 @@ fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
     check_s_format(&singles, &mut s_report)?;
     check_p_format(&phrases, &mut p_report)?;
     check_p_vacancy(&phrases, &mut p_report)?;
-
     // TODO
 
     output_report(&s_report, s_path, "单字")?;
     output_report(&p_report, p_path, "词组")
 }
 
-fn print(s: &str) -> io::Result<()> {
-    print!("{s}");
-    io::stdout().flush()
-}
-
 fn check_s_format(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
-    print("检查单字编码形式异常...")?;
-    let v = s_format::check(&singles);
-    Ok(match v.len() {
-        0 => println!("没有！"),
-        n => {
-            writeln!(report, "========单字编码形式异常========")?;
-            for e in v {
-                writeln!(report, "{e}")?;
-            }
-            println!("共 {n} 条！");
-        }
-    })
+    print("检查单字编码形式异常... ")?;
+    report_items(report, "单字编码形式异常", "条", &s_format::check(singles))
 }
 
 fn check_p_format(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
     print("检查词组编码形式异常...")?;
-    let v = p_format::check(&phrases);
-    Ok(match v.len() {
-        0 => println!("没有！"),
-        n => {
-            writeln!(report, "========词组编码形式异常========")?;
-            for e in v {
-                writeln!(report, "{e}")?;
-            }
-            println!("共 {n} 条！");
-        }
-    })
+    report_items(report, "词组编码形式异常", "条", &p_format::check(phrases))
 }
 
 fn check_p_vacancy(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
     print("检查词组空码...")?;
-    let v = p_vacancy::check(&phrases);
-    Ok(match v.len() {
-        0 => println!("没有！"),
+    report_items(report, "空码", "个", &p_vacancy::check(phrases))
+}
+
+fn report_items<T: Display>(report: &mut Vec<u8>, title: &str, unit: &str, items: &[T]) -> DynRes {
+    match items.len() {
+        0 => Ok(println!("没有！")),
         n => {
-            writeln!(report, "==============空码==============")?;
-            for code in v {
-                writeln!(report, "{code}")?;
+            let eq = "=".repeat((32 - 2 * title.chars().count()) / 2);
+            writeln!(report, "{eq}{title}{eq}")?;
+            for e in items {
+                writeln!(report, "{e}")?;
             }
-            println!("共 {n} 个！");
+            Ok(println!("共 {n} {unit}！"))
         }
-    })
+    }
 }
 
 fn output_report(report: &[u8], path: &Path, kind: &str) -> DynRes {
@@ -170,4 +146,9 @@ fn output_report(report: &[u8], path: &Path, kind: &str) -> DynRes {
         let file_name = write_report(path, &report)?;
         Ok(println!("已写入：{}", file_name.display()))
     }
+}
+
+fn print(s: &str) -> io::Result<()> {
+    print!("{s}");
+    io::stdout().flush()
 }

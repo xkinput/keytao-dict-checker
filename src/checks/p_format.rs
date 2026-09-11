@@ -1,13 +1,17 @@
 use crate::{entry::Phrase, keytao::*};
 
 pub(crate) fn check(dict: &[Phrase]) -> Vec<&Phrase> {
-    dict.iter().filter(|e| !valid(e)).collect()
+    dict.iter().filter(|e| !valid(&e.code, &e.text)).collect()
 }
 
-fn valid(e: &Phrase) -> bool {
-    let min = phrase_min_code_len(&e.text);
-    let b = e.code.as_bytes();
-    (min..=MAX_CODE_N).contains(&b.len())
-        && b[..min].iter().all(|&c| is_ym(c))
-        && b[min..].iter().all(|&c| is_xm(c))
+fn valid(code: &str, text: &str) -> bool {
+    match (phrase_min_code_len(text), code.as_bytes()) {
+        (3, [a, b, c, xm @ ..]) if xm.len() <= 3 => {
+            is_ym(*a) && is_ym(*b) && is_ym(*c) && xm.iter().all(|&c| is_xm(c))
+        }
+        (4, [a, b, c, d, xm @ ..]) if xm.len() <= 2 => {
+            is_ym(*a) && is_ym(*b) && is_ym(*c) && is_ym(*d) && xm.iter().all(|&c| is_xm(c))
+        }
+        _ => false,
+    }
 }
