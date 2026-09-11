@@ -5,7 +5,7 @@ pub(crate) fn check(dict: &[Single]) -> Vec<&Single> {
 }
 
 fn valid(b: &[u8]) -> bool {
-    matches!(b.len(), 2..=MAX_CODE_N)
+    (2..=MAX_CODE_N).contains(&b.len())
         && is_ym(b[0])
         && is_ym(b[1])
         && b[2..].iter().all(|&c| is_xm(c))

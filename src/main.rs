@@ -77,6 +77,7 @@ fn check_phrase_only(path: &Path) -> DynRes {
 
     let mut report = Vec::with_capacity(1024);
 
+    check_p_format(&phrases, &mut report)?;
     check_p_vacancy(&phrases, &mut report)?;
 
     // TODO
@@ -102,6 +103,7 @@ fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
     let mut p_report = Vec::with_capacity(1024);
 
     check_s_format(&singles, &mut s_report)?;
+    check_p_format(&phrases, &mut p_report)?;
     check_p_vacancy(&phrases, &mut p_report)?;
 
     // TODO
@@ -122,6 +124,21 @@ fn check_s_format(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
         0 => println!("没有！"),
         n => {
             writeln!(report, "========单字编码形式异常========")?;
+            for e in v {
+                writeln!(report, "{e}")?;
+            }
+            println!("共 {n} 条！");
+        }
+    })
+}
+
+fn check_p_format(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
+    print("检查词组编码形式异常...")?;
+    let v = p_format::check(&phrases);
+    Ok(match v.len() {
+        0 => println!("没有！"),
+        n => {
+            writeln!(report, "========词组编码形式异常========")?;
             for e in v {
                 writeln!(report, "{e}")?;
             }
