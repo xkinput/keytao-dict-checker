@@ -5,23 +5,13 @@ use inputs::*;
 use output::*;
 use std::{env::args, error::Error, io, io::Write, path::Path, process::ExitCode};
 
+mod checks;
 mod cli;
 mod entry;
 mod inputs;
 mod keytao;
 mod output;
 mod reader;
-
-mod checks {
-    pub(crate) mod p_companion;
-    pub(crate) mod p_consistency;
-    pub(crate) mod p_redundancy;
-    pub(crate) mod p_vacancy;
-    pub(crate) mod s_companion;
-    pub(crate) mod s_omission;
-    pub(crate) mod s_redundancy;
-    pub(crate) mod s_vacancy;
-}
 
 const TITLE: &str = "「RIME 键道」（KeyTao）码表检查器";
 const VER: &str = env!("CARGO_PKG_VERSION");
@@ -34,7 +24,7 @@ fn main() -> ExitCode {
     println!("{TITLE} v{VER}");
     println!("作者：{AUTHOR}");
     println!("仓库：{REPO}");
-    println!("================");
+    println!("================================");
 
     if let Err(e) = run() {
         eprintln!("错误：{e}");
@@ -73,6 +63,8 @@ fn check_single_only(path: &Path) -> DynRes {
 
     let mut report = Vec::with_capacity(1024);
 
+    check_s_format(&singles, &mut report)?;
+
     // TODO
 
     output_report(&report, path, "单字")
@@ -109,6 +101,7 @@ fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
     let mut s_report = Vec::with_capacity(1024);
     let mut p_report = Vec::with_capacity(1024);
 
+    check_s_format(&singles, &mut s_report)?;
     check_p_vacancy(&phrases, &mut p_report)?;
 
     // TODO
@@ -122,13 +115,28 @@ fn print(s: &str) -> io::Result<()> {
     io::stdout().flush()
 }
 
+fn check_s_format(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
+    print("检查单字编码形式异常...")?;
+    let v = s_format::check(&singles);
+    Ok(match v.len() {
+        0 => println!("没有！"),
+        n => {
+            writeln!(report, "========单字编码形式异常========")?;
+            for e in v {
+                writeln!(report, "{e}")?;
+            }
+            println!("共 {n} 条！");
+        }
+    })
+}
+
 fn check_p_vacancy(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
     print("检查词组空码...")?;
     let v = p_vacancy::check(&phrases);
     Ok(match v.len() {
         0 => println!("没有！"),
         n => {
-            writeln!(report, "======空码======")?;
+            writeln!(report, "==============空码==============")?;
             for code in v {
                 writeln!(report, "{code}")?;
             }
