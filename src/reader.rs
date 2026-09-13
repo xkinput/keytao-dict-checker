@@ -33,7 +33,7 @@ pub(crate) fn for_each_entry<T: EntryText>(path: &Path, mut f: impl FnMut(Entry<
         match Entry::parse(line_num, line.trim_end()) {
             Ok(Some(entry)) => f(entry),
             Err(err) => return Err(format!("第 {line_num} 行：{err}").into()),
-            _ => (),
+            _ => {}
         }
     }
 

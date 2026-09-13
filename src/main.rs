@@ -64,6 +64,7 @@ fn check_single_only(path: &Path) -> DynRes {
     let mut report = Vec::with_capacity(1024);
 
     check_s_format(&singles, &mut report)?;
+    check_s_xm_consistency(&singles, &mut report)?;
     // TODO
 
     output_report(&report, path, "单字")
@@ -101,6 +102,7 @@ fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
     let mut p_report = Vec::with_capacity(1024);
 
     check_s_format(&singles, &mut s_report)?;
+    check_s_xm_consistency(&singles, &mut s_report)?;
     check_p_format(&phrases, &mut p_report)?;
     check_p_vacancy(&phrases, &mut p_report)?;
     // TODO
@@ -111,17 +113,26 @@ fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
 
 fn check_s_format(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
     print("检查单字编码形式异常... ")?;
-    report_items(report, "单字编码形式异常", "条", &s_format::check(singles))
+    let v = s_format::check(singles);
+    report_items(report, "单字编码形式异常", "条", &v)
+}
+
+fn check_s_xm_consistency(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
+    print("检查单字形码段不自洽... ")?;
+    let v = s_xm_consistency::check(singles);
+    report_items(report, "单字形码段不自洽", "条", &v)
 }
 
 fn check_p_format(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
     print("检查词组编码形式异常...")?;
-    report_items(report, "词组编码形式异常", "条", &p_format::check(phrases))
+    let v = p_format::check(phrases);
+    report_items(report, "词组编码形式异常", "条", &v)
 }
 
 fn check_p_vacancy(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
     print("检查词组空码...")?;
-    report_items(report, "空码", "个", &p_vacancy::check(phrases))
+    let v = p_vacancy::check(phrases);
+    report_items(report, "空码", "个", &v)
 }
 
 fn report_items<T: Display>(report: &mut Vec<u8>, title: &str, unit: &str, items: &[T]) -> DynRes {
