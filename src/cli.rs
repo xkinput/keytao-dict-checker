@@ -13,7 +13,7 @@ impl Args {
             return Err("参数无效。用法参见 README。".into());
         };
 
-        Ok(match a.as_str() {
+        Ok(match &*a {
             "-s" => Args::SingleOnly(b.into()),
             "-p" => Args::PhraseOnly(b.into()),
             _ => Args::Both {

@@ -65,6 +65,7 @@ fn check_single_only(path: &Path) -> DynRes {
 
     check_s_format(&singles, &mut report)?;
     check_s_xm_consistency(&singles, &mut report)?;
+    check_s_jm_anomaly(&singles, &mut report)?;
     // TODO
 
     output_report(&report, path, "单字")
@@ -103,6 +104,7 @@ fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
 
     check_s_format(&singles, &mut s_report)?;
     check_s_xm_consistency(&singles, &mut s_report)?;
+    check_s_jm_anomaly(&singles, &mut s_report)?;
     check_p_format(&phrases, &mut p_report)?;
     check_p_vacancy(&phrases, &mut p_report)?;
     // TODO
@@ -121,6 +123,12 @@ fn check_s_xm_consistency(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
     print("检查单字形码段不自洽... ")?;
     let v = s_xm_consistency::check(singles);
     report_items(report, "单字形码段不自洽", "条", &v)
+}
+
+fn check_s_jm_anomaly(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
+    print("检查单字简码不当... ")?;
+    let v = s_jm_anomaly::check(singles);
+    report_items(report, "单字简码不当", "条", &v)
 }
 
 fn check_p_format(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
