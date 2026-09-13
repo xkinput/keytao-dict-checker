@@ -1,40 +1,45 @@
 use crate::entry::Single;
 
 pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
-    let n = singles.len();
-    let mut cnt = ahash::AHashMap::<_, u32>::with_capacity(n);
+    let mut occ = ahash::AHashMap::with_capacity(singles.len());
     for e in singles {
-        *cnt.entry(&*e.code).or_default() += 1;
+        *occ.entry(&*e.code).or_insert(0) += 1;
     }
 
-    let mut idx = Vec::from_iter(0..n);
-    idx.sort_unstable_by_key(|&i| (singles[i].text, &singles[i].code));
+    let mut items: Vec<_> = singles.iter().collect();
+    items.sort_unstable_by_key(|e| e.text);
+    let mut hit = vec![false; items.len()];
+    let mut start = 0;
 
-    let mut hit = vec![false; n];
-    let mut i = 0;
+    for g in items.chunk_by(|a, b| a.text == b.text) {
+        for f in g {
+            if g.iter()
+                .any(|e| e.code.len() > f.code.len() && e.code.starts_with(&*f.code))
+            {
+                continue;
+            }
 
-    while i < n {
-        let start = i;
-        let c = singles[idx[i]].text;
-        let code = &*singles[idx[i]].code;
+            let n = g
+                .iter()
+                .filter(|e| e.code.len() < f.code.len() && f.code.starts_with(&*e.code))
+                .count();
 
-        while i < n && singles[idx[i]].text == c && &*singles[idx[i]].code == code {
-            i += 1;
-        }
-
-        if i < n
-            && singles[idx[i]].text == c
-            && singles[idx[i]].code.starts_with(code)
-            && (cnt[code] > 1 || (1..code.len()).any(|j| !cnt.contains_key(&code[..j])))
-        {
-            for &j in &idx[start..i] {
-                hit[j] = true;
+            for (j, e) in g.iter().enumerate() {
+                if e.code.len() < f.code.len()
+                    && f.code.starts_with(&*e.code)
+                    && (n > 1
+                        || occ[&*e.code] > 1
+                        || (1..e.code.len()).any(|l| !occ.contains_key(&f.code[..l])))
+                {
+                    hit[start + j] = true;
+                }
             }
         }
+        start += g.len();
     }
 
-    singles
-        .iter()
+    items
+        .into_iter()
         .zip(hit)
         .filter_map(|(e, h)| h.then_some(e))
         .collect()
