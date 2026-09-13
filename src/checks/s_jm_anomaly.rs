@@ -1,46 +1,51 @@
 use crate::entry::Single;
 
 pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
-    let mut occ = ahash::AHashMap::with_capacity(singles.len());
+    let mut cnt = ahash::AHashMap::with_capacity(singles.len());
     for e in singles {
-        *occ.entry(&*e.code).or_insert(0) += 1;
+        *cnt.entry(&*e.code).or_insert(0) += 1;
     }
 
-    let mut items: Vec<_> = singles.iter().collect();
-    items.sort_unstable_by_key(|e| e.text);
-    let mut hit = vec![false; items.len()];
-    let mut start = 0;
+    let mut order: Vec<_> = (0..singles.len()).collect();
+    order.sort_unstable_by_key(|&i| (singles[i].text, i));
 
-    for g in items.chunk_by(|a, b| a.text == b.text) {
-        for f in g {
-            if g.iter()
-                .any(|e| e.code.len() > f.code.len() && e.code.starts_with(&*f.code))
+    let mut bad = vec![false; singles.len()];
+
+    for g in order.chunk_by(|&a, &b| singles[a].text == singles[b].text) {
+        for (pos, &full_i) in g.iter().enumerate() {
+            let full = &*singles[full_i].code;
+
+            if g[..pos].iter().any(|&i| &*singles[i].code == full)
+                || g.iter().any(|&i| {
+                    singles[i].code.len() > full.len() && singles[i].code.starts_with(full)
+                })
             {
                 continue;
             }
 
-            let n = g
-                .iter()
-                .filter(|e| e.code.len() < f.code.len() && f.code.starts_with(&*e.code))
-                .count();
+            let is_jm = |i: usize| {
+                &*singles[i].code == full
+                    || singles[i].code.len() < full.len() && full.starts_with(&*singles[i].code)
+            };
 
-            for (j, e) in g.iter().enumerate() {
-                if e.code.len() < f.code.len()
-                    && f.code.starts_with(&*e.code)
+            let n = g.iter().filter(|&&i| i != full_i && is_jm(i)).count();
+
+            for &i in g {
+                let code = &*singles[i].code;
+                if i != full_i
+                    && is_jm(i)
                     && (n > 1
-                        || occ[&*e.code] > 1
-                        || (1..e.code.len()).any(|l| !occ.contains_key(&f.code[..l])))
+                        || cnt[code] > 1
+                        || (1..code.len()).any(|k| !cnt.contains_key(&code[..k])))
                 {
-                    hit[start + j] = true;
+                    bad[i] = true;
                 }
             }
         }
-        start += g.len();
     }
 
-    items
+    order
         .into_iter()
-        .zip(hit)
-        .filter_map(|(e, h)| h.then_some(e))
+        .filter_map(|i| bad[i].then_some(&singles[i]))
         .collect()
 }
