@@ -24,7 +24,7 @@ fn main() -> ExitCode {
     println!("{TITLE} v{VER}");
     println!("作者：{AUTHOR}");
     println!("仓库：{REPO}");
-    println!("================================");
+    println!("{}", "=".repeat(32));
 
     if let Err(e) = run() {
         eprintln!("错误：{e}");
@@ -45,18 +45,18 @@ fn run() -> DynRes {
     println!("完成！");
 
     match args {
-        Args::SingleOnly(path) => check_single_only(&path)?,
-        Args::PhraseOnly(path) => check_phrase_only(&path)?,
+        Args::SingleOnly(path) => run_single_only(&path)?,
+        Args::PhraseOnly(path) => run_phrase_only(&path)?,
         Args::Both {
             single: s_path,
             phrase: p_path,
-        } => check_both(&s_path, &p_path)?,
+        } => run_both(&s_path, &p_path)?,
     }
 
     Ok(println!("程序结束，已退出！"))
 }
 
-fn check_single_only(path: &Path) -> DynRes {
+fn run_single_only(path: &Path) -> DynRes {
     print("载入单字码表...")?;
     let singles: SingleDict = load_dict(path)?;
     println!("完成！共 {} 个词条。", singles.len());
@@ -65,13 +65,14 @@ fn check_single_only(path: &Path) -> DynRes {
 
     check_s_format(&singles, &mut report)?;
     check_s_xm_consistency(&singles, &mut report)?;
+    check_s_jm_absence(&singles, &mut report)?;
     check_s_jm_anomaly(&singles, &mut report)?;
     // TODO
 
     output_report(&report, path, "单字")
 }
 
-fn check_phrase_only(path: &Path) -> DynRes {
+fn run_phrase_only(path: &Path) -> DynRes {
     print("载入词组码表...")?;
     let phrases: PhraseDict = load_dict(path)?;
     println!("完成！共 {} 个词条。", phrases.len());
@@ -79,13 +80,12 @@ fn check_phrase_only(path: &Path) -> DynRes {
     let mut report = Vec::with_capacity(1024);
 
     check_p_format(&phrases, &mut report)?;
-    check_p_vacancy(&phrases, &mut report)?;
     // TODO
 
     output_report(&report, path, "词组")
 }
 
-fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
+fn run_both(s_path: &Path, p_path: &Path) -> DynRes {
     print("载入单字码表...")?;
     let singles: SingleDict = load_dict(s_path)?;
     let stems = load_stems(s_path)?;
@@ -104,9 +104,9 @@ fn check_both(s_path: &Path, p_path: &Path) -> DynRes {
 
     check_s_format(&singles, &mut s_report)?;
     check_s_xm_consistency(&singles, &mut s_report)?;
+    check_s_jm_absence(&singles, &mut s_report)?;
     check_s_jm_anomaly(&singles, &mut s_report)?;
     check_p_format(&phrases, &mut p_report)?;
-    check_p_vacancy(&phrases, &mut p_report)?;
     // TODO
 
     output_report(&s_report, s_path, "单字")?;
@@ -125,6 +125,12 @@ fn check_s_xm_consistency(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
     report_items(report, "单字形码段不自洽", "条", &v)
 }
 
+fn check_s_jm_absence(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
+    print("检查单字简码缺失... ")?;
+    let v = s_jm_absence::check(singles);
+    report_items(report, "单字简码缺失", "条", &v)
+}
+
 fn check_s_jm_anomaly(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
     print("检查单字简码不当... ")?;
     let v = s_jm_anomaly::check(singles);
@@ -135,12 +141,6 @@ fn check_p_format(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
     print("检查词组编码形式异常...")?;
     let v = p_format::check(phrases);
     report_items(report, "词组编码形式异常", "条", &v)
-}
-
-fn check_p_vacancy(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
-    print("检查词组空码...")?;
-    let v = p_vacancy::check(phrases);
-    report_items(report, "空码", "个", &v)
 }
 
 fn report_items<T: Display>(report: &mut Vec<u8>, title: &str, unit: &str, items: &[T]) -> DynRes {

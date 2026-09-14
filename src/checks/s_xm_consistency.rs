@@ -23,7 +23,7 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
         }
     }
 
-    let mut bad: Vec<_> = singles.iter().filter(|e| states[&e.text].1).collect();
-    bad.sort_unstable_by_key(|e| e.text);
-    bad
+    let mut res: Vec<_> = singles.iter().filter(|e| states[&e.text].1).collect();
+    res.sort_unstable_by_key(|e| e.text);
+    res
 }
