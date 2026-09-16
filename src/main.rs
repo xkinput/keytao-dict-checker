@@ -65,6 +65,7 @@ fn run_single_only(path: &Path) -> DynRes {
 
     check_s_format(&singles, &mut report)?;
     check_s_xm_consistency(&singles, &mut report)?;
+    check_s_fj_absence(&singles, &mut report)?;
     check_s_jm_absence(&singles, &mut report)?;
     check_s_jm_anomaly(&singles, &mut report)?;
     // TODO
@@ -104,6 +105,7 @@ fn run_both(s_path: &Path, p_path: &Path) -> DynRes {
 
     check_s_format(&singles, &mut s_report)?;
     check_s_xm_consistency(&singles, &mut s_report)?;
+    check_s_fj_absence(&singles, &mut s_report)?;
     check_s_jm_absence(&singles, &mut s_report)?;
     check_s_jm_anomaly(&singles, &mut s_report)?;
     check_p_format(&phrases, &mut p_report)?;
@@ -115,32 +117,38 @@ fn run_both(s_path: &Path, p_path: &Path) -> DynRes {
 
 fn check_s_format(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
     print("检查单字编码形式异常... ")?;
-    let v = s_format::check(singles);
-    report_items(report, "单字编码形式异常", "条", &v)
+    let res = s_format::check(singles);
+    report_items(report, "单字编码形式异常", "条", &res)
 }
 
 fn check_s_xm_consistency(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
     print("检查单字形码段不自洽... ")?;
-    let v = s_xm_consistency::check(singles);
-    report_items(report, "单字形码段不自洽", "条", &v)
+    let res = s_xm_consistency::check(singles);
+    report_items(report, "单字形码段不自洽", "条", &res)
+}
+
+fn check_s_fj_absence(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
+    print("检查单字飞键伴生缺失... ")?;
+    let res = s_fj_absence::check(singles);
+    report_items(report, "单字飞键伴生缺失", "条", &res)
 }
 
 fn check_s_jm_absence(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
     print("检查单字简码缺失... ")?;
-    let v = s_jm_absence::check(singles);
-    report_items(report, "单字简码缺失", "条", &v)
+    let res = s_jm_absence::check(singles);
+    report_items(report, "单字简码缺失", "条", &res)
 }
 
 fn check_s_jm_anomaly(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
     print("检查单字简码不当... ")?;
-    let v = s_jm_anomaly::check(singles);
-    report_items(report, "单字简码不当", "条", &v)
+    let res = s_jm_anomaly::check(singles);
+    report_items(report, "单字简码不当", "条", &res)
 }
 
 fn check_p_format(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
     print("检查词组编码形式异常...")?;
-    let v = p_format::check(phrases);
-    report_items(report, "词组编码形式异常", "条", &v)
+    let res = p_format::check(phrases);
+    report_items(report, "词组编码形式异常", "条", &res)
 }
 
 fn report_items<T: Display>(report: &mut Vec<u8>, title: &str, unit: &str, items: &[T]) -> DynRes {

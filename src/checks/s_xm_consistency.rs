@@ -27,7 +27,7 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
     }
 
     if !bad {
-        return Vec::new();
+        return vec![];
     }
 
     let mut res: Vec<_> = singles

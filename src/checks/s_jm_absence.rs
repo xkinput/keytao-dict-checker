@@ -13,7 +13,7 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
 
     items.sort_unstable_by_key(|r| (r.0, r.1));
 
-    let mut res = Vec::new();
+    let mut res = vec![];
     for g in items.chunk_by(|a, b| a.0 == b.0) {
         let max = g.last().unwrap().2.code.len();
         for &(_, k, e) in g {

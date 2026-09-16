@@ -19,7 +19,7 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
     order.sort_unstable_by_key(|&i| (singles[i].text, &singles[i].code, i));
 
     let mut bad = vec![false; singles.len()];
-    let mut nodes = Vec::new();
+    let mut nodes = vec![];
 
     for g in order.chunk_by(|&a, &b| singles[a].text == singles[b].text) {
         process(g, singles, &cnt, &mut bad, &mut nodes);
