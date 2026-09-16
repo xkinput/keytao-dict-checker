@@ -1,29 +1,31 @@
-use crate::{DynRes, entry::Phrase, keytao::stem_key, reader::visit_dict};
+use crate::{keytao::*, reader::*, *};
 use std::path::Path;
 
-/// 词库
+/// 单字码表
+pub(crate) type SingleDict = Vec<Single>;
+/// 词组码表
 pub(crate) type PhraseDict = Vec<Phrase>;
 
-/// 读取并返回词库
-pub(crate) fn load_phrase_dict(path: &Path) -> DynRes<PhraseDict> {
-    let mut phrases = PhraseDict::with_capacity(65536);
-    visit_dict(path, |p| phrases.push(p))?;
-    Ok(phrases)
+/// 读取并返回码表
+pub(crate) fn load_dict<T: EntryText>(path: &Path) -> DynRes<Vec<Entry<T>>> {
+    let mut dict = Vec::with_capacity(4096);
+    for_each_entry(path, |e| dict.push(e))?;
+    Ok(dict)
 }
 
-/// 单字码表
-pub(crate) type SingleDict = ahash::AHashMap<char, Vec<u32>>;
+/// 构词码表
+pub(crate) type StemMap = ahash::AHashMap<char, Vec<Stem>>;
 
-/// 读取并返回单字码表和词条总数
-pub(crate) fn load_single_dict(path: &Path) -> DynRes<(SingleDict, usize)> {
-    let mut singles = SingleDict::with_capacity(4096);
-    let n = visit_dict(path, |s| {
-        if let Some(stem) = stem_key(&s.code) {
-            let stems = singles.entry(s.text).or_default();
+/// 读取并返回构词码表
+pub(crate) fn load_stems(path: &Path) -> DynRes<StemMap> {
+    let mut map = StemMap::with_capacity(4096);
+    for_each_entry(path, |e| {
+        if let Some(stem) = stem(&e.code) {
+            let stems = map.entry(e.text).or_default();
             if !stems.contains(&stem) {
                 stems.push(stem);
             }
         }
     })?;
-    Ok((singles, n))
+    Ok(map)
 }

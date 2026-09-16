@@ -1,13 +1,13 @@
 [package]
 name = "keytao-dict-checker"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 license = "MIT"
 publish = false
 readme = "README.md"
 repository = "https://github.com/xkinput/keytao-dict-checker"
 rust-version = "1.98.1"
-description = "「RIME 键道」词库检查器"
+description = "「RIME 键道」（KeyTao）码表检查器"
 
 [dependencies]
 ahash = { version = "0.8.12", default-features = false, features = ["std", "no-rng"] }
