@@ -2,28 +2,38 @@ use crate::Single;
 
 pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
     let mut states = ahash::AHashMap::with_capacity(singles.len() / 2);
+    let mut bad = false;
 
     for e in singles {
+        let x = e.code.as_bytes().get(2..).unwrap_or(&[]);
+        if x.is_empty() {
+            continue;
+        }
+
         let (longest, is_bad) = states.entry(e.text).or_default();
         if *is_bad {
             continue;
         }
 
-        let code = e.code.as_bytes();
-        if code.len() < 3 {
-            continue;
-        }
-        let xm = &code[2..];
-
         match *longest {
-            None => *longest = Some(xm),
-            Some(l) if l.starts_with(xm) => {}
-            Some(l) if xm.starts_with(l) => *longest = Some(xm),
-            _ => *is_bad = true,
+            None => *longest = Some(x),
+            Some(l) if l.starts_with(x) => {}
+            Some(l) if x.starts_with(l) => *longest = Some(x),
+            Some(_) => {
+                *is_bad = true;
+                bad = true;
+            }
         }
     }
 
-    let mut res: Vec<_> = singles.iter().filter(|e| states[&e.text].1).collect();
-    res.sort_unstable_by_key(|e| e.text);
+    if !bad {
+        return Vec::new();
+    }
+
+    let mut res: Vec<_> = singles
+        .iter()
+        .filter(|e| states.get(&e.text).is_some_and(|s| s.1))
+        .collect();
+    res.sort_unstable_by_key(|e| (e.text, &e.code));
     res
 }
