@@ -63,13 +63,13 @@ fn run_single_only(path: &Path) -> DynRes {
 
     let mut report = Vec::with_capacity(1024);
 
-    check_s_format(&singles, &mut report)?;
-    check_s_xm_consistency(&singles, &mut report)?;
-    check_s_fj_absence(&singles, &mut report)?;
-    check_s_jm_absence(&singles, &mut report)?;
-    check_s_jm_redundancy(&singles, &mut report)?;
-    check_s_jm_collision(&singles, &mut report)?;
-    check_s_jm_vacancy(&singles, &mut report)?;
+    check_s(&singles, &mut report, "编码形式异常", s_format::check)?;
+    check_s(&singles, &mut report, "形码段冲突", s_xm_conflict::check)?;
+    check_s(&singles, &mut report, "词条冗余", s_redundancy::check)?;
+    check_s(&singles, &mut report, "孤立飞键", s_fj_orphan::check)?;
+    check_s(&singles, &mut report, "孤立全码", s_qm_orphan::check)?;
+    check_s(&singles, &mut report, "简码重码", s_jm_collision::check)?;
+    check_s(&singles, &mut report, "简码空码", s_jm_vacancy::check)?;
 
     output_report(&report, path, "单字")
 }
@@ -81,7 +81,7 @@ fn run_phrase_only(path: &Path) -> DynRes {
 
     let mut report = Vec::with_capacity(1024);
 
-    check_p_format(&phrases, &mut report)?;
+    check_p(&phrases, &mut report, "编码形式异常", p_format::check)?;
     // TODO
 
     output_report(&report, path, "词组")
@@ -104,71 +104,49 @@ fn run_both(s_path: &Path, p_path: &Path) -> DynRes {
     let mut s_report = Vec::with_capacity(1024);
     let mut p_report = Vec::with_capacity(1024);
 
-    check_s_format(&singles, &mut s_report)?;
-    check_s_xm_consistency(&singles, &mut s_report)?;
-    check_s_fj_absence(&singles, &mut s_report)?;
-    check_s_jm_absence(&singles, &mut s_report)?;
-    check_s_jm_redundancy(&singles, &mut s_report)?;
-    check_s_jm_collision(&singles, &mut s_report)?;
-    check_s_jm_vacancy(&singles, &mut s_report)?;
+    check_s(&singles, &mut s_report, "编码形式异常", s_format::check)?;
+    check_s(&singles, &mut s_report, "形码段冲突", s_xm_conflict::check)?;
+    check_s(&singles, &mut s_report, "词条冗余", s_redundancy::check)?;
+    check_s(&singles, &mut s_report, "孤立飞键", s_fj_orphan::check)?;
+    check_s(&singles, &mut s_report, "孤立全码", s_qm_orphan::check)?;
+    check_s(&singles, &mut s_report, "简码重码", s_jm_collision::check)?;
+    check_s(&singles, &mut s_report, "简码空码", s_jm_vacancy::check)?;
 
-    check_p_format(&phrases, &mut p_report)?;
+    check_p(&phrases, &mut p_report, "编码形式异常", p_format::check)?;
     // TODO
 
     output_report(&s_report, s_path, "单字")?;
     output_report(&p_report, p_path, "词组")
 }
 
-fn check_s_format(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
-    print("检查单字编码形式异常... ")?;
-    report_items(report, "编码形式异常", "条", &s_format::check(singles))
+fn check_s<'a, T, F>(singles: &'a [Single], report: &mut Vec<u8>, name: &str, f: F) -> DynRes
+where
+    T: Display,
+    F: FnOnce(&'a [Single]) -> Vec<T>,
+{
+    print(&format!("检查单字{name}..."))?;
+    report_items(report, name, &f(singles))
 }
 
-fn check_s_xm_consistency(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
-    print("检查单字形码段冲突... ")?;
-    report_items(report, "形码段冲突", "条", &s_xm_conflict::check(singles))
+fn check_p<'a, T, F>(phrases: &'a [Phrase], report: &mut Vec<u8>, name: &str, f: F) -> DynRes
+where
+    T: Display,
+    F: FnOnce(&'a [Phrase]) -> Vec<T>,
+{
+    print(&format!("检查词组{name}..."))?;
+    report_items(report, name, &f(phrases))
 }
 
-fn check_s_fj_absence(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
-    print("检查单字飞键伴生缺失... ")?;
-    report_items(report, "飞键伴生缺失", "条", &s_fj_absence::check(singles))
-}
-
-fn check_s_jm_absence(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
-    print("检查单字简码缺失... ")?;
-    report_items(report, "简码缺失", "条", &s_jm_absence::check(singles))
-}
-
-fn check_s_jm_redundancy(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
-    print("检查单字简码冗余... ")?;
-    report_items(report, "简码冗余", "条", &s_jm_redundancy::check(singles))
-}
-
-fn check_s_jm_collision(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
-    print("检查单字简码重码... ")?;
-    report_items(report, "简码重码", "个", &s_jm_collision::check(singles))
-}
-
-fn check_s_jm_vacancy(singles: &[Single], report: &mut Vec<u8>) -> DynRes {
-    print("检查单字简码空码... ")?;
-    report_items(report, "简码空码", "个", &s_jm_vacancy::check(singles))
-}
-
-fn check_p_format(phrases: &[Phrase], report: &mut Vec<u8>) -> DynRes {
-    print("检查词组编码形式异常...")?;
-    report_items(report, "词组编码形式异常", "条", &p_format::check(phrases))
-}
-
-fn report_items<T: Display>(report: &mut Vec<u8>, title: &str, unit: &str, items: &[T]) -> DynRes {
+fn report_items<T: Display>(report: &mut Vec<u8>, name: &str, items: &[T]) -> DynRes {
     match items.len() {
         0 => Ok(println!("没有！")),
         n => {
-            let eq = "=".repeat((32 - 2 * title.chars().count()) / 2);
-            writeln!(report, "{eq}{title}{eq}")?;
+            let eq = "=".repeat(16 - name.chars().count());
+            writeln!(report, "{eq}{name}{eq}")?;
             for e in items {
                 writeln!(report, "{e}")?;
             }
-            Ok(println!("共 {n} {unit}！"))
+            Ok(println!("共 {n} 条！"))
         }
     }
 }

@@ -5,7 +5,7 @@ pub(crate) trait EntryText: Sized {
     fn parse(s: &str) -> Option<Self>;
 }
 
-/// 码表中的词条
+/// 词条：码表中的一行
 pub(crate) struct Entry<T: EntryText> {
     /// 从 1 开始的行号
     line_num: usize,
