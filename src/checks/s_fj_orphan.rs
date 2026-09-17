@@ -1,4 +1,4 @@
-use crate::{entry::Single, keytao::*};
+use crate::{Single, keytao::*};
 
 const PAIRS: [(u8, u8, u8, u8); 10] = [
     (b'f', b'e', b'q', b'e'),
@@ -50,7 +50,7 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
         *masks.entry(e.text).or_default() |= m;
     }
 
-    let mut res: Vec<_> = singles
+    let mut result: Vec<_> = singles
         .iter()
         .filter(|e| match e.code.as_bytes() {
             [a, b, ..] => {
@@ -60,6 +60,6 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
             _ => false,
         })
         .collect();
-    res.sort_unstable_by_key(|e| (e.text, &e.code));
-    res
+    result.sort_unstable_by_key(|e| (e.text, &e.code));
+    result
 }

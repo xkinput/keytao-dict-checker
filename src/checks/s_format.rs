@@ -1,4 +1,4 @@
-use crate::{entry::Single, keytao::*};
+use crate::{Single, keytao::*};
 
 pub(crate) fn check(dict: &[Single]) -> Vec<&Single> {
     dict.iter().filter(|e| !valid(&e.code)).collect()

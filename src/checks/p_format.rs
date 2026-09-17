@@ -1,4 +1,4 @@
-use crate::{entry::Phrase, keytao::*};
+use crate::{Phrase, keytao::*};
 
 pub(crate) fn check(dict: &[Phrase]) -> Vec<&Phrase> {
     dict.iter().filter(|e| !valid(&e.code, &e.text)).collect()

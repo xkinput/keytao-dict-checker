@@ -30,10 +30,10 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
         return vec![];
     }
 
-    let mut res: Vec<_> = singles
+    let mut result: Vec<_> = singles
         .iter()
         .filter(|e| states.get(&e.text).is_some_and(|s| s.1))
         .collect();
-    res.sort_unstable_by_key(|e| (e.text, &e.code));
-    res
+    result.sort_unstable_by_key(|e| (e.text, &e.code));
+    result
 }
