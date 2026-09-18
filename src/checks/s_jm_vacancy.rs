@@ -7,7 +7,7 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&str> {
 
     for e in singles {
         if e.code.len() <= MAX_CODE_N {
-            let k = encode_code(&e.code);
+            let k = e.code.bytes().fold(0, append_key);
             used.insert(k);
             pairs.insert(pack_pair(e.text, k));
         }
@@ -44,14 +44,10 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&str> {
     result
 }
 
-fn encode_code(code: &str) -> u32 {
-    code.bytes().fold(0, append_key)
+fn append_key(key: u32, c: u8) -> u32 {
+    key * 27 + u32::from(c - b'a' + 1)
 }
 
 fn pack_pair(text: char, key: u32) -> u64 {
     u64::from(text) << 32 | u64::from(key)
-}
-
-fn append_key(key: u32, c: u8) -> u32 {
-    key * 27 + u32::from(c - b'a' + 1)
 }

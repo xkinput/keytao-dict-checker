@@ -82,6 +82,8 @@ fn run_phrase_only(path: &Path) -> DynRes {
     let mut report = Vec::with_capacity(1024);
 
     check_p(&phrases, &mut report, "编码形式异常", p_format::check)?;
+    check_p(&phrases, &mut report, "词条冗余", p_redundancy::check)?;
+    check_p(&phrases, &mut report, "空码", p_vacancy::check)?;
     // TODO
 
     output_report(&report, path, "词组")
@@ -113,6 +115,8 @@ fn run_both(s_path: &Path, p_path: &Path) -> DynRes {
     check_s(&singles, &mut s_report, "简码空码", s_jm_vacancy::check)?;
 
     check_p(&phrases, &mut p_report, "编码形式异常", p_format::check)?;
+    check_p(&phrases, &mut p_report, "词条冗余", p_redundancy::check)?;
+    check_p(&phrases, &mut p_report, "空码", p_vacancy::check)?;
     // TODO
 
     output_report(&s_report, s_path, "单字")?;

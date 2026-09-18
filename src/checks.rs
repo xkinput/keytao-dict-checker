@@ -1,4 +1,6 @@
 pub(crate) mod p_format;
+pub(crate) mod p_redundancy;
+pub(crate) mod p_vacancy;
 pub(crate) mod s_fj_orphan;
 pub(crate) mod s_format;
 pub(crate) mod s_jm_collision;
