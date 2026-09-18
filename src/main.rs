@@ -1,10 +1,24 @@
-mod checks;
 mod cli;
 mod entry;
 mod inputs;
 mod keytao;
 mod output;
 mod reader;
+
+mod checks {
+    pub(crate) mod p_format;
+    pub(crate) mod p_on_s_anomaly;
+    pub(crate) mod p_on_s_fj_incomplete;
+    pub(crate) mod p_redundancy;
+    pub(crate) mod p_vacancy;
+    pub(crate) mod s_fj_orphan;
+    pub(crate) mod s_format;
+    pub(crate) mod s_jm_collision;
+    pub(crate) mod s_jm_vacancy;
+    pub(crate) mod s_qm_orphan;
+    pub(crate) mod s_redundancy;
+    pub(crate) mod s_xm_conflict;
+}
 
 use checks::*;
 use cli::*;
@@ -84,7 +98,6 @@ fn run_phrase_only(path: &Path) -> DynRes {
     check_p(&phrases, &mut report, "编码形式异常", p_format::check)?;
     check_p(&phrases, &mut report, "词条冗余", p_redundancy::check)?;
     check_p(&phrases, &mut report, "空码", p_vacancy::check)?;
-    // TODO
 
     output_report(&report, path, "词组")
 }
@@ -117,7 +130,21 @@ fn run_both(s_path: &Path, p_path: &Path) -> DynRes {
     check_p(&phrases, &mut p_report, "编码形式异常", p_format::check)?;
     check_p(&phrases, &mut p_report, "词条冗余", p_redundancy::check)?;
     check_p(&phrases, &mut p_report, "空码", p_vacancy::check)?;
-    // TODO
+
+    check_p_on_s(
+        &phrases,
+        &stems,
+        &mut p_report,
+        "无理码",
+        p_on_s_anomaly::check,
+    )?;
+    check_p_on_s(
+        &phrases,
+        &stems,
+        &mut p_report,
+        "残缺飞键",
+        p_on_s_fj_incomplete::check,
+    )?;
 
     output_report(&s_report, s_path, "单字")?;
     output_report(&p_report, p_path, "词组")
@@ -139,6 +166,17 @@ where
 {
     print(&format!("检查词组{name}..."))?;
     report_items(report, name, &f(phrases))
+}
+
+fn check_p_on_s<'a, T: Display>(
+    phrases: &'a [Phrase],
+    stems: &StemMap,
+    report: &mut Vec<u8>,
+    name: &str,
+    f: impl FnOnce(&'a [Phrase], &StemMap) -> Vec<T>,
+) -> DynRes {
+    print(&format!("检查词组{name}..."))?;
+    report_items(report, name, &f(phrases, stems))
 }
 
 fn report_items<T: Display>(report: &mut Vec<u8>, name: &str, items: &[T]) -> DynRes {
