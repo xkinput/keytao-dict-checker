@@ -1,7 +1,6 @@
 use crate::{Phrase, keytao::*};
 
-const BITS: usize = 27usize.pow(MAX_CODE_N as u32 - 1);
-const WORDS: usize = (BITS + 63) / 64;
+const WORDS: usize = (27usize.pow(MAX_CODE_N as u32 - 1) + 63) / 64;
 
 pub(crate) fn check(phrases: &[Phrase]) -> Vec<&str> {
     let mut used = vec![0; WORDS];

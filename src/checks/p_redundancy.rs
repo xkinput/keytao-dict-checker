@@ -1,8 +1,9 @@
 use crate::{Phrase, keytao::*};
+use rayon::prelude::*;
 
 pub(crate) fn check(phrases: &[Phrase]) -> Vec<&Phrase> {
     let mut entries = Vec::from_iter(phrases);
-    entries.sort_unstable_by_key(|e| (&e.text, &e.code));
+    entries.par_sort_unstable_by_key(|e| (&e.text, &e.code));
     entries
         .chunk_by(|a, b| a.text == b.text)
         .flat_map(|grp| {

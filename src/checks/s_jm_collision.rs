@@ -16,7 +16,7 @@ pub(crate) fn check(singles: &[crate::Single]) -> Vec<&str> {
         codes.sort_unstable();
         codes.dedup();
 
-        if codes.len() < 2 || !codes.iter().any(|&code| cnt[code] > 1) {
+        if codes.len() < 2 || !codes.iter().any(|code| cnt[code] > 1) {
             continue;
         }
 

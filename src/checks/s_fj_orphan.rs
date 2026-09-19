@@ -13,10 +13,6 @@ const PAIRS: [(u8, u8, u8, u8); 10] = [
     (b'w', b'm', b'w', b'x'),
 ];
 
-fn ix(c: u8) -> usize {
-    usize::from(c - b'a')
-}
-
 pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
     let mut evid = [[0; CODE_ELEMS]; CODE_ELEMS];
     let mut one = [0; CODE_ELEMS];
@@ -62,4 +58,8 @@ pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
         .collect();
     result.sort_unstable_by_key(|e| (e.text, &e.code));
     result
+}
+
+fn ix(c: u8) -> usize {
+    usize::from(c - b'a')
 }
