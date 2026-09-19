@@ -4,7 +4,6 @@ mod inputs;
 mod keytao;
 mod output;
 mod reader;
-
 mod checks {
     pub(crate) mod p_format;
     pub(crate) mod p_on_s_anomaly;
@@ -105,12 +104,11 @@ fn run_phrase_only(path: &Path) -> DynRes {
 fn run_both(s_path: &Path, p_path: &Path) -> DynRes {
     print("载入单字码表...")?;
     let singles: SingleDict = load_dict(s_path)?;
-    let stems = load_stems(s_path)?;
-    println!(
-        "完成！共 {} 个词条，{} 个单字。",
-        singles.len(),
-        stems.len()
-    );
+    println!("完成！共 {} 个词条。", singles.len());
+
+    print("提取构词码...")?;
+    let stems = get_stems(&singles)?;
+    println!("完成！共 {} 个单字。", stems.len());
 
     print("载入词组码表...")?;
     let phrases: PhraseDict = load_dict(p_path)?;

@@ -1,6 +1,6 @@
 use crate::*;
 use saphyr::{LoadableYamlNode, Yaml};
-use std::{fs::File, io::BufRead, io::BufReader, path::Path};
+use std::{fs::File, io::BufRead, io::BufReader};
 
 pub(crate) fn for_each_entry<T: EntryText>(path: &Path, mut f: impl FnMut(Entry<T>)) -> DynRes {
     let mut reader = BufReader::new(File::open(path)?);

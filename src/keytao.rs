@@ -14,7 +14,7 @@ pub(crate) fn is_ym(c: u8) -> bool {
 }
 
 /// 从单字编码中提取构词码；不足时返回 `None`
-pub(crate) fn stem(code: &str) -> Option<Stem> {
+pub(crate) fn get_stem(code: &str) -> Option<Stem> {
     match code.as_bytes() {
         [a, b, c, ..] => Some([*a, *b, *c]),
         _ => None,
