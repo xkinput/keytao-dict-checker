@@ -1,5 +1,18 @@
 # 「RIME 键道」（KeyTao）码表检查器
 
+![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4)
+![macOS arm64](https://img.shields.io/badge/macOS-arm64-000?logo=macos)
+![Linux x64](https://img.shields.io/badge/Linux-x64-F4BC00?logo=linux)
+
+[![GitHub repo](https://img.shields.io/badge/GitHub-repo-0FBF3E?logo=github)](https://github.com/xkinput/keytao-dict-checker)
+[![Latest Release](https://img.shields.io/github/v/release/xkinput/keytao-dict-checker?color=0FBF3E&label=Latest&logo=github)](https://github.com/xkinput/keytao-dict-checker/releases/latest)
+![Downloads](https://img.shields.io/github/downloads/xkinput/keytao-dict-checker/total?color=0FBF3E&label=Downloads&logo=github)
+
+[![Rust 1.98](https://img.shields.io/badge/Rust-1.98-D34516?logo=rust)](https://rust-lang.org/)
+[![MIT License](https://img.shields.io/badge/License-MIT-750014)](https://mit-license.org)
+
+一个 CLI 程序，用于检查 [RIME 键道](https://github.com/xkinput/KeyTao) 词库中的几项特定问题。
+
 ## 🧭 用法
 
 ```text
@@ -27,3 +40,8 @@ keytao-dict-checker <单字码表> <词组码表>
 | 残缺飞键     | 该词条编码包含飞键，但伴生不完整                             | 词条 | 是       |
 
 按输入自动启用条件允许的全部检查项：仅提供单字码表时 7 项；仅提供词组码表时 3 项；齐备时 12 项。
+
+## 📤 输出与退出
+
+问题报告输出到标准输出；运行错误输出到标准错误。
+退出码只表示运行状态：正常完成为 0，运行错误非 0；检查结果以输出内容为准。
