@@ -1,31 +1,29 @@
-# KeyTao Dictionary Checker
+# 「RIME 键道」（KeyTao）码表检查器
 
-KeyTao（键道）输入方案词库检查工具
+## 🧭 用法
 
-[![Latest Release](https://img.shields.io/github/v/release/xkinput/keytao-dict-checker?color=0FBF3E&label=Latest&logo=github)](https://github.com/xkinput/keytao-dict-checker/releases/latest)
+```text
+keytao-dict-checker -s <单字码表>
+keytao-dict-checker -p <词组码表>
+keytao-dict-checker <单字码表> <词组码表>
+```
 
-## ✨ 特性
+| 单字检查项   | 说明                                   | 输出 |
+|--------------|----------------------------------------|------|
+| 编码形式异常 | 编码不是 `<2个音码><2-4个形码>` 的前缀 | 词条 |
+| 形码段冲突   | 单字不同词条的形码不是单一形码段的前缀 | 词条 |
+| 词条冗余     | 单字在某编码链上存在超过两个词条       | 词条 |
+| 孤立飞键     | 该词条编码包含飞键，但未伴生           | 词条 |
+| 孤立全码     | 该全码词条缺失对应的简码词条           | 词条 |
+| 简码重码     | 该编码被多个现有简码词条使用           | 编码 |
+| 简码空码     | 该编码被现有简码词条跳过               | 编码 |
 
-- 🚀 **极致性能**：瞬间检查完毕，无需等待
-- 🎯 **精确优化**：检查算法针对键道特化，一丝不苟
-- 🚂 **配置驱动**：通过 TOML 文件配置所有参数
+| 词组检查项   | 说明                                                         | 输出 | 依赖单字 |
+|--------------|--------------------------------------------------------------|------|----------|
+| 编码形式异常 | 编码不是 `<4个音码><2个形码>` 或 `<3个音码><3个形码>` 的前缀 | 词条 | 否       |
+| 词条冗余     | 词组在某编码链上存在超过一个词条                             | 词条 | 否       |
+| 空码         | 该编码被现有词条跳过                                         | 编码 | 否       |
+| 无理码       | 无法按规则推导该词条的编码                                   | 词条 | 是       |
+| 残缺飞键     | 该词条编码包含飞键，但伴生不完整                             | 词条 | 是       |
 
-## 📥 使用
-
-1. 从 [Latest Release](https://github.com/xkinput/keytao-dict-checker/releases/latest) 下载相应平台的压缩包并解压
-2. 在 `config.toml` 中配置参数
-3. 运行 `cn-input-encode <config.toml>`，问题报告将输出至词库所在目录，默认为 `{原名}-report.txt`，若已存在则自动加编号，不会覆写
-
-## ℹ 关于
-
-- 地址：https://github.com/xkinput/keytao-dict-checker
-- 语言：![Rust](https://img.shields.io/badge/Rust-CE422B?logo=rust)
-- 协议：[![License MIT](https://img.shields.io/badge/License-MIT-750014)](https://mit-license.org)
-- 作者：Garth TB | 天卜 <g-art-h@outlook.com>
-- 版权：Copyright (c) 2026 Garth TB | 天卜
-
-## 📝 版本
-
-### 0.1.0 (20260606)
-
-首发
+按输入自动启用条件允许的全部检查项：仅提供单字码表时 7 项；仅提供词组码表时 3 项；齐备时 12 项。

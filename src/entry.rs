@@ -1,65 +1,73 @@
-use crate::DynResult;
-use std::{fmt::Display, rc::Rc};
+use std::fmt;
 
-pub(crate) struct Entry<T> {
-    pub(crate) line_num: usize,
-    pub(crate) text: T,
-    pub(crate) code: String,
-    raw: String,
+pub(crate) trait EntryText: Sized {
+    const KIND: &str;
+    fn parse(s: &str) -> Option<Self>;
 }
 
-impl<T: Display> Entry<T> {
-    pub(crate) fn to_str(&self) -> String {
-        format!("第{}行：'{}'", self.line_num, self.raw)
+/// 词条：码表中的一行
+pub(crate) struct Entry<T: EntryText> {
+    /// 从 1 开始的行号
+    line_num: usize,
+    /// 修剪过的原始行
+    line: Box<str>,
+    /// 文本
+    pub(crate) text: T,
+    /// 编码
+    pub(crate) code: Box<str>,
+}
+
+/// 单字词条
+pub(crate) type Single = Entry<char>;
+
+/// 词组词条
+pub(crate) type Phrase = Entry<Box<str>>;
+
+impl EntryText for char {
+    const KIND: &str = "单字";
+    fn parse(s: &str) -> Option<Self> {
+        s.parse().ok()
     }
 }
 
-pub(crate) trait TextParser: Sized {
-    fn parse(num: usize, trimmed_text: &str) -> DynResult<Self>;
+impl EntryText for Box<str> {
+    const KIND: &str = "词组";
+    fn parse(s: &str) -> Option<Self> {
+        s.chars().nth(1).is_some().then(|| s.into())
+    }
 }
 
-impl<T: TextParser> Entry<T> {
-    pub(crate) fn new(line_num: usize, line: &str) -> DynResult<Option<Self>> {
-        let l = line.trim();
-        if l.is_empty() || l.starts_with('#') {
+impl<T: EntryText> Entry<T> {
+    /// 将修剪过的码表行解析为词条
+    pub(crate) fn parse(line_num: usize, line: &str) -> crate::DynRes<Option<Self>> {
+        if line.is_empty() || line.starts_with('#') {
             return Ok(None);
         }
-        let mut parts = l.splitn(4, '\t');
+
+        let mut parts = line.splitn(3, '\t');
+
+        let raw_text = parts
+            .next()
+            .filter(|s| !s.trim().is_empty())
+            .ok_or("缺失文本。")?;
+        let parsed_text = T::parse(raw_text).ok_or_else(|| format!("文本不是{}。", T::KIND))?;
+
+        let code = parts
+            .next()
+            .filter(|s| !s.trim().is_empty())
+            .ok_or("缺失编码。")?;
+
         Ok(Some(Self {
             line_num,
-            text: match parts.next().unwrap().trim() {
-                "" => return Err(format!("第{line_num}行词条缺失文本").into()),
-                trimmed => T::parse(line_num, trimmed)?,
-            },
-            code: match parts.next().map(|s| s.trim()) {
-                Some("") | None => return Err(format!("第{line_num}行词条缺失编码").into()),
-                Some(s) => s.into(),
-            },
-            raw: l.into(),
+            line: line.into(),
+            text: parsed_text,
+            code: code.into(),
         }))
     }
 }
 
-pub(crate) type Single = Entry<char>;
-
-impl TextParser for char {
-    fn parse(line_num: usize, trimmed_text: &str) -> DynResult<Self> {
-        let mut chars = trimmed_text.chars();
-        let c = chars.next().unwrap(); // 一定非空
-        if chars.next().is_some() {
-            return Err(format!("第{line_num}行词条的文本不是单字").into());
-        }
-        Ok(c)
-    }
-}
-
-pub(crate) type Phrase = Entry<Rc<str>>;
-
-impl TextParser for Rc<str> {
-    fn parse(line_num: usize, trimmed_text: &str) -> DynResult<Self> {
-        if trimmed_text.chars().count() < 2 {
-            return Err(format!("第{line_num}行词条的文本不是词组").into());
-        }
-        Ok(trimmed_text.into())
+impl<T: EntryText> fmt::Display for Entry<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "第 {} 行：\t{}", self.line_num, self.line)
     }
 }
