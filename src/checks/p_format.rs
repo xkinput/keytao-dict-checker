@@ -1,7 +1,10 @@
 use crate::{Phrase, keytao::*};
 
-pub(crate) fn check(dict: &[Phrase]) -> Vec<&Phrase> {
-    dict.iter().filter(|e| !valid(&e.code, &e.text)).collect()
+pub(crate) fn check(phrases: &[Phrase]) -> Vec<&Phrase> {
+    phrases
+        .iter()
+        .filter(|e| !valid(&e.code, &e.text))
+        .collect()
 }
 
 fn valid(code: &str, text: &str) -> bool {

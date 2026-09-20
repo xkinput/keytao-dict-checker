@@ -1,7 +1,7 @@
 use crate::{Single, keytao::*};
 
-pub(crate) fn check(dict: &[Single]) -> Vec<&Single> {
-    dict.iter().filter(|e| !valid(&e.code)).collect()
+pub(crate) fn check(singles: &[Single]) -> Vec<&Single> {
+    singles.iter().filter(|e| !valid(&e.code)).collect()
 }
 
 fn valid(code: &str) -> bool {
