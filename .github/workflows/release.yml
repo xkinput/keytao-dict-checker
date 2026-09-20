@@ -1,0 +1,69 @@
+name: 发布
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            ext: ''
+            os_name: linux-x64
+            archive_ext: tar.gz
+            pack: tar -czf
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            ext: ''
+            os_name: osx-arm64
+            archive_ext: tar.gz
+            pack: tar -czf
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            ext: .exe
+            os_name: win-x64
+            archive_ext: zip
+            pack: 7z a -tzip -mx=9
+
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: 检出
+        uses: actions/checkout@v7
+
+      - name: 工具链
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: 构建
+        run: cargo build -r --target ${{ matrix.target }}
+
+      - name: 组装
+        run: |
+          mkdir keytao-dict-checker
+          cp target/${{ matrix.target }}/release/keytao-dict-checker${{ matrix.ext }} keytao-dict-checker/
+          cp README.md LICENSE CHANGELOG.md keytao-dict-checker/
+
+      - name: 打包
+        run: |
+          FILE="keytao-dict-checker-${{ github.ref_name }}-${{ matrix.os_name }}.${{ matrix.archive_ext }}"
+          ${{ matrix.pack }} $FILE keytao-dict-checker
+          shasum -a 256 $FILE > $FILE.sha256
+        env:
+          GZIP: -9
+
+      - name: 发布
+        uses: softprops/action-gh-release@v3
+        with:
+          files: keytao-dict-checker-${{ github.ref_name }}-*
