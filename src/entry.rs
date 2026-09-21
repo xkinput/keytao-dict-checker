@@ -68,6 +68,6 @@ impl<T: EntryText> Entry<T> {
 
 impl<T: EntryText> fmt::Display for Entry<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "第 {} 行：\t{}", self.line_num, self.line)
+        write!(f, "行号 {:<7}\t{}", self.line_num, self.line)
     }
 }

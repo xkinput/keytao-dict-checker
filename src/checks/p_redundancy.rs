@@ -7,7 +7,8 @@ pub(crate) fn check(phrases: &[Phrase]) -> Vec<&Phrase> {
     entries
         .chunk_by(|a, b| a.text == b.text)
         .flat_map(|grp| {
-            let n = phrase_min_code_len(&grp[0].text);
+            let n = phrase_min_code_len(&grp[0].text)
+                .min(grp.iter().min_by_key(|e| e.code.len()).unwrap().code.len());
             grp.chunk_by(move |a, b| a.code[..n] == b.code[..n])
         })
         .filter(|grp| grp.len() > 1)

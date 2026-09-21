@@ -20,10 +20,8 @@ mod checks {
 }
 
 use checks::*;
-use cli::*;
 use entry::*;
 use inputs::*;
-use output::*;
 use std::{env::args, error::Error, fmt::Display, io, io::Write, path::Path, process::ExitCode};
 
 const TITLE: &str = "「RIME 键道」（KeyTao）码表检查器";
@@ -34,6 +32,7 @@ const REPO: &str = env!("CARGO_PKG_REPOSITORY");
 pub(crate) type DynRes<T = ()> = Result<T, Box<dyn Error>>;
 
 fn main() -> ExitCode {
+    println!("{}", "=".repeat(32));
     println!("{TITLE} v{VER}");
     println!("作者：{AUTHOR}");
     println!("仓库：{REPO}");
@@ -46,21 +45,20 @@ fn main() -> ExitCode {
             eprintln!("    > {s}");
             src = s.source();
         }
-        ExitCode::FAILURE
-    } else {
-        ExitCode::SUCCESS
+        return ExitCode::FAILURE;
     }
+    ExitCode::SUCCESS
 }
 
 fn run() -> DynRes {
     print("解析参数...")?;
-    let args = Args::parse(args().skip(1))?;
+    let args = cli::Args::parse(args().skip(1))?;
     println!("完成！");
 
     match args {
-        Args::SingleOnly(path) => run_single_only(&path)?,
-        Args::PhraseOnly(path) => run_phrase_only(&path)?,
-        Args::Both {
+        cli::Args::SingleOnly(path) => run_single_only(&path)?,
+        cli::Args::PhraseOnly(path) => run_phrase_only(&path)?,
+        cli::Args::Both {
             single: s_path,
             phrase: p_path,
         } => run_both(&s_path, &p_path)?,
@@ -196,8 +194,8 @@ fn output_report(report: &[u8], path: &Path, kind: &str) -> DynRes {
         Ok(println!("{kind}报告为空，码表没问题！"))
     } else {
         print(&format!("输出{kind}报告..."))?;
-        let file_name = write_report(path, &report)?;
-        Ok(println!("已写入：{}", file_name.display()))
+        let name = output::write_report(path, &report)?;
+        Ok(println!("已写入：{}", name.display()))
     }
 }
 
