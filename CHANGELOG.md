@@ -4,6 +4,8 @@
 
 ## [开发中]
 
+## [0.3.0] - 2026-09-22
+
 - **Added:** 针对单字码表的多项检查。
 - **Added:** 词组码表编码形式异常检查项。
 - **Changed:** CLI 参数用法。
@@ -21,7 +23,9 @@
 
 [语义化版本]: https://semver.org
 
-[开发中]: https://github.com/xkinput/keytao-dict-checker/compare/v0.2.0...HEAD
+[开发中]: https://github.com/xkinput/keytao-dict-checker/compare/v0.3.0...HEAD
+
+[0.3.0]: https://github.com/xkinput/keytao-dict-checker/compare/v0.2.0...v0.3.0
 
 [0.2.0]: https://github.com/xkinput/keytao-dict-checker/compare/v0.1.0...v0.2.0
 
